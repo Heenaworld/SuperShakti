@@ -1,0 +1,17 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.git
+.gitignore
+.gradle
+app/
+gradle/
+video_build/
+*.mp4
+*.log
+*.ps1
+*.bat
+README.md
+metadata.json

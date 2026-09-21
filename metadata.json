@@ -1,0 +1,6 @@
+{
+  "name": "SuperShakti",
+  "description": "A feeling-first matching app connecting women to immediate self-help, peer buddy support, and vetted specialists based on what they are going through.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

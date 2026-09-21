@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SuperShakti - Women's Sisterhood & Life Transition Sanctuary</title>
+  <link rel="icon" type="image/jpeg" href="assets/supershaki_logo.jpg">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Leaflet Interactive Map Engine (OpenStreetMap, Zero Tracking) -->
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <meta name="description" content="A feeling-first matching web sanctuary connecting women to immediate self-help, peer buddy support, and vetted specialists based on what they are going through.">
+  <meta name="theme-color" content="#7C3AED">
+</head>
+<body>
+
+  <!-- Weather Disguise / Quick Safety Curtain -->
+  <div id="safety-curtain-container"></div>
+
+  <!-- Global Application Header -->
+  <header class="app-header">
+    <div class="brand-section" id="brand-logo" title="SuperShakti Sanctuary">
+      <img src="assets/supershaki_logo.jpg" alt="SuperShakti Logo" class="brand-icon">
+      <div>
+        <div class="brand-title">SuperShakti</div>
+        <div class="brand-tagline">Women Support System</div>
+      </div>
+    </div>
+
+    <nav class="nav-actions">
+      <button class="nav-btn active" data-screen="home">
+        <span class="label">Home</span>
+      </button>
+      <button class="nav-btn" data-screen="packages">
+        <span class="label">16 Packages</span>
+      </button>
+      <button class="nav-btn" data-screen="mentors">
+        <span class="label">Peer Networks</span>
+      </button>
+      <button class="nav-btn" data-screen="map">
+        <span class="label">Advice Map</span>
+      </button>
+      <button class="nav-btn" data-screen="sanctuary">
+        <span class="label">My Sanctuary</span>
+        <span class="badge" id="sanctuary-badge" style="display: none;">0</span>
+      </button>
+      <button class="nav-btn report-btn" id="header-report-btn" title="View Summary Report">
+        <span class="label">Report</span>
+      </button>
+      <button class="nav-btn" id="settings-btn" title="Privacy, Country & AI Settings">
+        <span class="label">Settings</span>
+      </button>
+      <!-- Country Picker Button (Moved from Left to Right) -->
+      <button class="country-select-btn" id="header-country-btn" title="Select your country for local helplines & advice map">
+        <span id="header-country-flag" style="display: none;"></span>
+        <span class="label" id="header-country-name">United States</span>
+        <span style="font-size: 0.75rem;">▾</span>
+      </button>
+      <button class="safety-exit-btn" id="quick-safety-exit-btn" title="Immediately switch to weather view for privacy">
+        <span class="label">Quick Exit</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="container" id="app-main">
+    <!-- Populated dynamically by app.js -->
+  </main>
+
+  <!-- Modals Container -->
+  <div id="modal-container"></div>
+
+  <!-- Bottom Emergency Numbers & Zero-IP Privacy Line -->
+  <aside class="emergency-bottom-bar" id="global-emergency-banner" aria-label="Crisis Helplines and Privacy Notice">
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <span id="emergency-banner-text">In immediate crisis? Call <strong>911</strong> (US) or <strong>988 Lifeline</strong>.</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <!-- Change Country on Right -->
+      <button id="banner-change-country-btn" class="banner-country-btn" title="Switch your country for local emergency lines">
+        Switch Country ▾
+      </button>
+      <span class="privacy-shield-badge">Zero-Tracking: No IP Address or Location Stored</span>
+    </div>
+  </aside>
+
+  <!-- Footer -->
+  <footer style="border-top: 1px solid var(--border); background: var(--surface); padding: 24px 20px; text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-top: auto;">
+    <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <img src="assets/supershaki_logo.jpg" alt="SuperShakti Logo" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: top center; border: 1.5px solid #F59E0B; box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);">
+        <div style="font-weight: 700; color: #4B5563;">SuperShakti • Women Support System & Advice Map</div>
+      </div>
+      <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 10px 14px; color: #166534; font-size: 0.82rem; line-height: 1.4; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          Zero-Tracking Architecture & Zero Fake Profiles
+        </div>
+        <div>SuperShakti does <strong>NOT store or log your location, GPS, or IP address</strong>. All peer communities, advice centers, and crisis numbers are verified real non-profit institutions. Everything you save remains strictly in your own local device storage.</div>
+      </div>
+      <div id="footer-emergency-text">If you or someone you know is in immediate life-threatening danger, call your national emergency number (<strong>911</strong> in US/Canada, <strong>999</strong> in UK, <strong>000</strong> in Australia, <strong>112</strong> in Europe/India).</div>
+      <div style="font-size: 0.78rem; color: #9CA3AF;">Private & Local • Built with empathy for women across the globe.</div>
+    </div>
+  </footer>
+
+  <!-- Leaflet Interactive Map Script -->
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <!-- Application Logic -->
+  <script type="module" src="app.js?v=2.3.0"></script>
+</body>
+</html>
