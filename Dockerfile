@@ -1,27 +1,42 @@
-# Production Dockerfile for Google Cloud Run
-FROM python:3.11-slim
-
-# Prevent Python from writing .pyc and enable unbuffered output for Cloud Logging
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
+# Multi-stage production build for SuperShakti Full-Stack Application
+# Stage 1: Build frontend and compile backend
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy dependency manifests
+COPY package*.json ./
 
-# Copy server and static web assets
-COPY server.py .
-COPY web/ ./web/
+# Install all dependencies (including devDependencies required for vite & esbuild)
+RUN npm ci
 
-# Create non-root user for cloud security
-RUN useradd -m appuser && chown -R appuser:appuser /app
-USER appuser
+# Copy application source code
+COPY . .
 
-# Expose port (Cloud Run defaults to 8080)
-EXPOSE 8080
+# Run production build: Vite frontend -> dist/ & esbuild server -> dist/server.cjs
+RUN npm run build
 
-# Launch server with dynamic PORT environment variable
-CMD ["sh", "-c", "exec uvicorn server:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# Stage 2: Production runner
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Install production-only dependencies
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Copy compiled distribution artifacts from builder
+COPY --from=builder /app/dist ./dist
+
+# Expose standard container port
+EXPOSE 3000
+
+# Health check to ensure Express server is healthy and responding
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+
+# Start bundled Node.js server
+CMD ["node", "dist/server.cjs"]

@@ -10,8 +10,21 @@ import {
   getMeetupsForPackage,
   getGirlsGroupsForPackage,
   getHelplinesForCountry,
-  getPlacesForCountry
+  getPlacesForCountry,
+  getStatesForCountry,
+  getCitiesForCountryAndState
 } from './catalog.js?v=2.2.0';
+
+export const COUNTRY_FLAGS = {
+  US: '🇺🇸',
+  GB: '🇬🇧',
+  UK: '🇬🇧',
+  CA: '🇨🇦',
+  AU: '🇦🇺',
+  EU: '🇪🇺',
+  IN: '🇮🇳',
+  GLOBAL: '🌍'
+};
 
 // State Management
 const STATE = {
@@ -26,8 +39,12 @@ const STATE = {
   breathingInterval: null,
   breathPhase: 'Inhale softly through nose',
   breathCountdown: 4,
+  mapViewMode: 'radar',
+  selectedAdviceNodeId: 'immediate-safety-exit',
   mapCategory: 'ALL',
   mapCountry: (localStorage.getItem('supershakti_country') || localStorage.getItem('supershaki_country')) || 'ALL',
+  mapState: localStorage.getItem('supershakti_map_state') || 'ALL',
+  mapCity: localStorage.getItem('supershakti_map_city') || 'ALL',
   selectedPlaceId: 'place_sf_womens_building',
   mapSearchQuery: '',
   isSafetyCurtainActive: false,
@@ -48,6 +65,8 @@ function getPackageImageUrl(pkg) {
 
 function persistState() {
   localStorage.setItem('supershakti_country', STATE.country);
+  localStorage.setItem('supershakti_map_state', STATE.mapState);
+  localStorage.setItem('supershakti_map_city', STATE.mapCity);
   localStorage.setItem('supershakti_saved_tools', JSON.stringify(STATE.savedTools));
   localStorage.setItem('supershakti_peer_requests', JSON.stringify(STATE.peerMatchRequests));
   localStorage.setItem('supershakti_history', JSON.stringify(STATE.careHistory));
@@ -99,7 +118,7 @@ const ABUSE_TRIGGERS = [
 ];
 
 const SELF_HARM_TRIGGERS = [
-  'want to die', 'kill myself', 'end my life', 'better off dead', 'suicide',
+  'want to die', 'kill myself', 'end my life', 'better off dead',
   'self-harm', 'cut myself', 'no reason to live'
 ];
 
@@ -271,9 +290,9 @@ function matchOffline(inputFeeling, countryCode = 'US') {
   let isHybrid = false;
   let hybridSynergy = null;
 
-  for (let i = 1; i < Math.min(4, sortedPkgIds.length); i++) {
+  for (let i = 1; i < Math.min(5, sortedPkgIds.length); i++) {
     const pid = sortedPkgIds[i];
-    if (scores[pid] >= 18 && scores[pid] >= (topScore * 0.25)) {
+    if ((scores[pid] >= 8 && scores[pid] >= (topScore * 0.18)) || scores[pid] >= 14) {
       if (pid !== topPkgId) {
         const sec = findPackageById(pid);
         if (sec && !secondaryPackages.some(p => p.id === sec.id)) {
@@ -289,7 +308,11 @@ function matchOffline(inputFeeling, countryCode = 'US') {
 
   const allPids = new Set([primaryPkg.id, ...secondaryPackages.map(p => p.id)]);
 
-  if ((allPids.has("divorce_separation") || allPids.has("emotional_struggles")) && 
+  if (secondaryPackages.length >= 2) {
+    const secList = secondaryPackages.map(p => p.title).join(' and ');
+    hybridSynergy = `Your prompt articulates ${1 + secondaryPackages.length} intersecting life transitions: <strong>${primaryPkg.title}</strong>, alongside <strong>${secList}</strong>. All matching packages are accessible together so you don't have to navigate any part alone.`;
+    detectedNeeds.push("Multi-Dimensional Sisterhood Support");
+  } else if ((allPids.has("divorce_separation") || allPids.has("emotional_struggles")) && 
       (allPids.has("job_search_remote_loneliness") || allPids.has("career_changes"))) {
     hybridSynergy = "Navigating the emotional drain of a demanding relationship alongside heavy workplace stress creates acute burnout. When both your personal haven and professional life demand more than you can carry, establishing firm emotional boundaries and reclaiming personal agency are essential to restoring your peace.";
     detectedNeeds.push("Relationship Boundaries & Emotional Sovereignty", "Workplace Stress & Career Decompression");
@@ -625,6 +648,7 @@ function renderMatchResults() {
 
   const isToolSaved = STATE.savedTools.some(t => t.id === tool.id);
   const hasRequestedMatch = STATE.peerMatchRequests.some(r => r.packageId === pkg.id);
+  const allMatches = [pkg, ...(res.secondaryPackages || [])].filter((p, idx, arr) => p && arr.findIndex(x => x.id === p.id) === idx);
 
   return `
     <div class="match-result-container">
@@ -672,6 +696,63 @@ function renderMatchResults() {
           <strong style="color: #B45309; font-size: 0.9rem;">[Notice]</strong>
           <div style="font-size: 0.92rem; line-height: 1.4;">
             <strong>Safety Note:</strong> ${res.escalationReason}
+          </div>
+        </div>
+      ` : ''}
+
+      ${allMatches.length >= 2 ? `
+        <div class="multi-matches-showcase">
+          <div class="multi-matches-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="multi-matches-badge">✨ All Matching Packages Identified (${allMatches.length} Matches Found)</span>
+            </div>
+            <span style="font-size: 0.82rem; color: #6D28D9; font-weight: 700;">Showing All Matching Support Enclaves</span>
+          </div>
+          <p style="font-size: 0.92rem; color: #4B5563; margin: 4px 0 16px; line-height: 1.5;">
+            Your prompt touches multiple life facets. We matched <strong>${allMatches.length} specialized support packages</strong> to your exact words. Every matching package is unlocked below; toggle your primary focus anytime:
+          </p>
+
+          <div class="matched-packages-selector-grid">
+            ${allMatches.map((mPkg, idx) => {
+              const isCurrent = mPkg.id === pkg.id;
+              const mTool = mPkg.defaultMicroTool || (mPkg.careTools && mPkg.careTools[0]) || null;
+              return `
+                <div class="matched-pkg-selector-card ${isCurrent ? 'active' : ''}">
+                  <div>
+                    <div class="matched-pkg-selector-top">
+                      <img src="${getPackageImageUrl(mPkg)}" alt="${mPkg.title}" class="matched-pkg-mini-img">
+                      <div style="flex: 1; min-width: 0;">
+                        <div class="matched-pkg-selector-role">
+                          ${idx === 0 ? 'Primary Match' : `Co-Occurring Match #${idx + 1}`}
+                          ${isCurrent ? ' • Active View' : ''}
+                        </div>
+                        <div class="matched-pkg-selector-title">${mPkg.title}</div>
+                      </div>
+                    </div>
+                    <div class="matched-pkg-selector-covers" style="margin-top: 8px;">${mPkg.covers}</div>
+                    ${mTool ? `
+                      <div class="matched-pkg-tool-chip" style="margin-top: 8px;">
+                        <span>⚡ ${mTool.title} (~${mTool.durationMinutes}m)</span>
+                      </div>
+                    ` : ''}
+                  </div>
+                  <div class="matched-pkg-actions" style="margin-top: 10px;">
+                    ${isCurrent ? `
+                      <span class="active-focus-pill">✓ Currently Viewing Full Path</span>
+                    ` : `
+                      <div style="display: flex; gap: 6px;">
+                        <button class="nav-btn switch-focus-btn" data-pkg-id="${mPkg.id}" style="flex: 1; justify-content: center; background: #7C3AED; color: white; font-size: 0.82rem; padding: 7px 10px;">
+                          Focus on This →
+                        </button>
+                        <button class="nav-btn explore-sec-pkg-btn" data-sec-id="${mPkg.id}" style="font-size: 0.82rem; padding: 7px 10px;" title="Preview Package Details">
+                          Details
+                        </button>
+                      </div>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
         </div>
       ` : ''}
@@ -1066,6 +1147,22 @@ function attachMatchListeners() {
     });
   });
 
+  document.querySelectorAll('.switch-focus-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pkgId = btn.dataset.pkgId;
+      const target = findPackageById(pkgId);
+      if (target && res) {
+        const oldPrimary = res.matchedPackage;
+        const currentSecondaries = res.secondaryPackages || [];
+        const newSecondaries = [oldPrimary, ...currentSecondaries.filter(p => p.id !== target.id)];
+        res.matchedPackage = target;
+        res.secondaryPackages = newSecondaries;
+        renderApp();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  });
+
   document.querySelectorAll('.explore-sec-pkg-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const secId = btn.dataset.secId;
@@ -1296,18 +1393,36 @@ let leafletMarkersMap = new Map();
 function getFilteredMapPlaces() {
   const query = (STATE.mapSearchQuery || '').trim().toLowerCase();
 
-  const countryFiltered = STATE.mapCountry === 'ALL'
+  // 1. Filter by Country
+  const countryFiltered = (!STATE.mapCountry || STATE.mapCountry === 'ALL')
     ? ADVICE_PLACES
     : ADVICE_PLACES.filter(p => p.country === STATE.mapCountry);
 
-  const catFiltered = STATE.mapCategory === 'ALL'
+  // 2. Filter by State / Province
+  const stateFiltered = (!STATE.mapState || STATE.mapState === 'ALL')
     ? countryFiltered
-    : countryFiltered.filter(p => p.category === STATE.mapCategory);
+    : countryFiltered.filter(p => 
+        (p.state || '').toLowerCase() === STATE.mapState.toLowerCase() ||
+        (p.stateCode || '').toLowerCase() === STATE.mapState.toLowerCase()
+      );
+
+  // 3. Filter by City
+  const cityFiltered = (!STATE.mapCity || STATE.mapCity === 'ALL')
+    ? stateFiltered
+    : stateFiltered.filter(p =>
+        (p.cityName || p.city || '').toLowerCase() === STATE.mapCity.toLowerCase() ||
+        (p.city || '').toLowerCase().includes(STATE.mapCity.toLowerCase())
+      );
+
+  // 4. Filter by Category
+  const catFiltered = (!STATE.mapCategory || STATE.mapCategory === 'ALL')
+    ? cityFiltered
+    : cityFiltered.filter(p => p.category === STATE.mapCategory);
 
   if (!query) return catFiltered;
 
   return catFiltered.filter(p => {
-    const text = `${p.name} ${p.city || ''} ${p.address || ''} ${p.adviceType || ''} ${(p.keyAdviceOffered || []).join(' ')}`.toLowerCase();
+    const text = `${p.name} ${p.city || ''} ${p.state || ''} ${p.cityName || ''} ${p.address || ''} ${p.adviceType || ''} ${(p.keyAdviceOffered || []).join(' ')}`.toLowerCase();
     return text.includes(query);
   });
 }
@@ -1470,13 +1585,12 @@ function initLeafletMap(filteredPlaces, currentPlace) {
     leafletMapInstance = window.L.map('leaflet-map', {
       center: initCenter,
       zoom: initZoom,
-      scrollWheelZoom: true
+      scrollWheelZoom: true,
+      attributionControl: false
     });
 
-    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors • SuperShakti Confidential Map',
-      maxZoom: 18
-    }).addTo(leafletMapInstance);
+    // Note: Background OpenStreetMap tileLayer is removed to eliminate 403 Forbidden ("Access blocked")
+    // and protect women's privacy with zero third-party tile telemetry.
 
     filteredPlaces.forEach(p => {
       if (!p.lat || !p.lng) return;
@@ -1553,13 +1667,132 @@ function initLeafletMap(filteredPlaces, currentPlace) {
   }
 }
 
+function renderMapBreadcrumbsHtml() {
+  const isFiltered = (STATE.mapCountry !== 'ALL' || STATE.mapState !== 'ALL' || STATE.mapCity !== 'ALL');
+  if (!isFiltered) return '';
+
+  const countryObj = COUNTRIES[STATE.mapCountry];
+  return `
+    <div class="map-location-breadcrumbs">
+      <span class="map-breadcrumb-label"><span>📍</span> Filter Hierarchy:</span>
+      ${STATE.mapCountry !== 'ALL' ? `
+        <span class="map-breadcrumb-tag">
+          ${COUNTRY_FLAGS[STATE.mapCountry] || countryObj?.flag || '🌍'} ${countryObj?.name || STATE.mapCountry}
+          <button class="map-breadcrumb-remove" data-level="country" title="Remove country filter">×</button>
+        </span>
+      ` : ''}
+      ${STATE.mapState !== 'ALL' ? `
+        <span class="map-breadcrumb-separator">›</span>
+        <span class="map-breadcrumb-tag">
+          🏛️ ${STATE.mapState}
+          <button class="map-breadcrumb-remove" data-level="state" title="Remove state filter">×</button>
+        </span>
+      ` : ''}
+      ${STATE.mapCity !== 'ALL' ? `
+        <span class="map-breadcrumb-separator">›</span>
+        <span class="map-breadcrumb-tag">
+          📍 ${STATE.mapCity}
+          <button class="map-breadcrumb-remove" data-level="city" title="Remove city filter">×</button>
+        </span>
+      ` : ''}
+      <button id="map-clear-locations-btn" class="map-clear-locations-btn" title="Reset all location filters">Clear All Locations</button>
+    </div>
+  `;
+}
+
+function attachBreadcrumbListeners() {
+  document.querySelectorAll('.map-breadcrumb-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const level = btn.dataset.level;
+      if (level === 'country') {
+        STATE.mapCountry = 'ALL';
+        STATE.mapState = 'ALL';
+        STATE.mapCity = 'ALL';
+      } else if (level === 'state') {
+        STATE.mapState = 'ALL';
+        STATE.mapCity = 'ALL';
+      } else if (level === 'city') {
+        STATE.mapCity = 'ALL';
+      }
+      STATE.selectedPlaceId = null;
+      persistState();
+      updateMapFilters();
+    });
+  });
+
+  const clearBtn = document.getElementById('map-clear-locations-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      STATE.mapCountry = 'ALL';
+      STATE.mapState = 'ALL';
+      STATE.mapCity = 'ALL';
+      STATE.selectedPlaceId = null;
+      persistState();
+      updateMapFilters();
+    });
+  }
+}
+
 function updateMapFilters() {
   const filteredPlaces = getFilteredMapPlaces();
 
   // 1. Update Country dropdown
   const countrySelect = document.getElementById('map-country-select');
-  if (countrySelect) {
+  if (countrySelect && countrySelect.value !== STATE.mapCountry) {
     countrySelect.value = STATE.mapCountry;
+  }
+
+  // 1b. Update State dropdown options based on selected country
+  const stateSelect = document.getElementById('map-state-select');
+  if (stateSelect) {
+    const states = getStatesForCountry(STATE.mapCountry);
+    const totalStatePlaces = states.reduce((sum, s) => sum + s.count, 0);
+    const currentSelected = STATE.mapState;
+    stateSelect.innerHTML = `
+      <option value="ALL" ${currentSelected === 'ALL' ? 'selected' : ''}>🏛️ All States / Regions (${totalStatePlaces})</option>
+      ${states.map(s => `
+        <option value="${s.name}" ${currentSelected === s.name ? 'selected' : ''}>
+          ${s.name}${s.count > 0 ? ` (${s.count})` : ''}
+        </option>
+      `).join('')}
+    `;
+    if (currentSelected !== 'ALL' && !states.some(s => s.name === currentSelected)) {
+      STATE.mapState = 'ALL';
+      stateSelect.value = 'ALL';
+    } else {
+      stateSelect.value = STATE.mapState;
+    }
+  }
+
+  // 1c. Update City dropdown options based on selected country + state
+  const citySelect = document.getElementById('map-city-select');
+  if (citySelect) {
+    const cities = getCitiesForCountryAndState(STATE.mapCountry, STATE.mapState);
+    const totalCityPlaces = cities.reduce((sum, c) => sum + c.count, 0);
+    const currentCity = STATE.mapCity;
+    citySelect.innerHTML = `
+      <option value="ALL" ${currentCity === 'ALL' ? 'selected' : ''}>📍 All Cities (${totalCityPlaces})</option>
+      ${cities.map(c => `
+        <option value="${c.name}" ${currentCity === c.name ? 'selected' : ''}>
+          ${c.name}${c.count > 0 ? ` (${c.count})` : ''}
+        </option>
+      `).join('')}
+    `;
+    if (currentCity !== 'ALL' && !cities.some(c => c.name === currentCity)) {
+      STATE.mapCity = 'ALL';
+      citySelect.value = 'ALL';
+    } else {
+      citySelect.value = STATE.mapCity;
+    }
+  }
+
+  // 1d. Update Breadcrumbs Bar
+  const breadcrumbsContainer = document.getElementById('map-breadcrumbs-container');
+  if (breadcrumbsContainer) {
+    breadcrumbsContainer.innerHTML = renderMapBreadcrumbsHtml();
+    attachBreadcrumbListeners();
   }
 
   // 2. Update Category chips
@@ -1567,20 +1800,27 @@ function updateMapFilters() {
     chip.classList.toggle('active', chip.dataset.cat === STATE.mapCategory);
   });
 
-  // 3. Update category counts in chips
-  const countryPlaces = STATE.mapCountry === 'ALL'
-    ? ADVICE_PLACES
-    : ADVICE_PLACES.filter(p => p.country === STATE.mapCountry);
+  // 3. Update category counts in chips reflecting the current hierarchical location
+  const locationScopedPlaces = ADVICE_PLACES.filter(p => {
+    const matchCountry = (!STATE.mapCountry || STATE.mapCountry === 'ALL') || p.country === STATE.mapCountry;
+    const matchState = (!STATE.mapState || STATE.mapState === 'ALL') || 
+      (p.state || '').toLowerCase() === STATE.mapState.toLowerCase() || 
+      (p.stateCode || '').toLowerCase() === STATE.mapState.toLowerCase();
+    const matchCity = (!STATE.mapCity || STATE.mapCity === 'ALL') || 
+      (p.cityName || p.city || '').toLowerCase() === STATE.mapCity.toLowerCase() ||
+      (p.city || '').toLowerCase().includes(STATE.mapCity.toLowerCase());
+    return matchCountry && matchState && matchCity;
+  });
 
   const allChip = document.querySelector('.map-cat-chip[data-cat="ALL"]');
   if (allChip) {
-    allChip.textContent = `All (${countryPlaces.length})`;
+    allChip.textContent = `All (${locationScopedPlaces.length})`;
   }
 
   Object.values(ADVICE_CATEGORIES).forEach(c => {
     const chip = document.querySelector(`.map-cat-chip[data-cat="${c.key}"]`);
     if (chip) {
-      const count = countryPlaces.filter(p => p.category === c.key).length;
+      const count = locationScopedPlaces.filter(p => p.category === c.key).length;
       chip.innerHTML = `<span>${c.icon}</span> ${c.label} (${count})`;
     }
   });
@@ -1723,13 +1963,183 @@ function updateMapFilters() {
   }
 }
 
-function renderMapScreen() {
-  const countryFiltered = STATE.mapCountry === 'ALL'
-    ? ADVICE_PLACES
-    : ADVICE_PLACES.filter(p => p.country === STATE.mapCountry);
+const ADVICE_NODES = [
+  {
+    id: 'immediate-safety-exit',
+    title: 'Discreet Exit & Physical Safety Protocol',
+    domain: 'safety',
+    domainLabel: 'Safety & Protection',
+    badge: 'Urgent Safety',
+    icon: '🛡️',
+    summary: 'Tactical guidance for preparing a secure departure without tipping off an escalating or abusive partner.',
+    xPercent: 26,
+    yPercent: 26,
+    coreAnchor: 'Your physical safety precedes all relational obligations or emotional processing.',
+    immediateStep: 'Keep car keys and essential documents (ID, passport, cash) stored together inside a discreet everyday container.',
+    script: '"I am stepping out to pick up groceries and baby supplies. I will have my phone on silent to keep the baby calm."',
+    warningSigns: [
+      'Partner monitoring phone battery percentage or mileage tracker',
+      'Escalating threats involving household pets or belongings',
+      'Sudden confiscation of car keys, wallets, or identification'
+    ],
+    lifeline: 'National Domestic Violence Hotline: 1-800-799-SAFE (Text START to 88788)',
+    relatedPackageId: 'divorce_separation'
+  },
+  {
+    id: 'somatic-downregulation-freeze',
+    title: 'Nervous System & Somatic Down-Regulation',
+    domain: 'somatic',
+    domainLabel: 'Somatic Grounding',
+    badge: 'Panic & Freeze',
+    icon: '🌿',
+    summary: 'Polyvagal grounding practices to break freeze response and restore blood flow to executive processing brain centers.',
+    xPercent: 50,
+    yPercent: 18,
+    coreAnchor: 'You cannot think your way out of a survival state your body is feeling. Physiology must be soothed first.',
+    immediateStep: 'Run cold water over wrists or press a cold drink can to cheek, then take a double inhale through nose followed by slow 6-second sigh.',
+    script: '"My body is misinterpreting stress as physical danger. Right now, in this second, I am in a chair and I am safe."',
+    warningSigns: [
+      'Heart pounding over 110 BPM while seated',
+      'Feeling detached from hands or surroundings (dissociation)',
+      'Compulsive phone checking or looping doom-scrolling'
+    ],
+    lifeline: 'Crisis Text Line: Text HOME to 741741 (Free 24/7)',
+    relatedPackageId: 'emotional_struggles'
+  },
+  {
+    id: 'gray-rock-counter-narcissism',
+    title: 'Gray Rocking & Toxic Relatives Defense',
+    domain: 'relationships',
+    domainLabel: 'Relationships & Boundaries',
+    badge: 'Boundary Mastery',
+    icon: '🪨',
+    summary: 'Neutralize emotional baiting, guilt-trips, and high-conflict family members by becoming as uninteresting as a plain gray rock.',
+    xPercent: 74,
+    yPercent: 26,
+    coreAnchor: 'Emotional vampires crave your emotional reactivity. Monotone neutrality starves the drama cycle.',
+    immediateStep: 'Keep vocal pitch completely flat. Refuse to defend, justify, or explain (JADE principle).',
+    script: '"I hear your perspective. I have made my decision, and it is not open for debate."',
+    warningSigns: [
+      'Bringing up past mistakes to distract from current boundary violations',
+      'Weaponizing tears or shouting to force an immediate concession',
+      'Triangulating other family members to pressure you'
+    ],
+    lifeline: 'Sisterhood Peer Mentors • Free 1-on-1 Confidential Sanctuary',
+    relatedPackageId: 'healthy_anger'
+  },
+  {
+    id: 'postpartum-fourth-trimester',
+    title: 'Postpartum Depletion & Maternal Identity',
+    domain: 'maternal',
+    domainLabel: 'Maternal Sanctuary',
+    badge: 'Maternal Care',
+    icon: '🤱',
+    summary: 'Navigating baby blues, sleep deprivation psychosis risk, intrusive thoughts, and unlearning the "Supermom" myth.',
+    xPercent: 23,
+    yPercent: 48,
+    coreAnchor: 'Intrusive thoughts are a symptom of an exhausted maternal brain, not a reflection of your moral fitness as a mother.',
+    immediateStep: 'Hand baby to any safe adult or put baby safely in crib for 10 minutes while you take a warm shower alone with earplugs.',
+    script: '"I love our baby, but my mental health requires 4 uninterrupted hours of sleep tonight. We need a shift system starting today."',
+    warningSigns: [
+      'Inability to sleep even when baby is deeply sleeping',
+      'Constant dread that something catastrophic will happen to baby',
+      'Feeling numb or resentful toward partner and infant'
+    ],
+    lifeline: 'Postpartum Support International: 1-800-944-4773 (Call/Text)',
+    relatedPackageId: 'pregnancy_postpartum'
+  },
+  {
+    id: 'career-burnout-boundaries',
+    title: 'Corporate Burnout & Quiet Quitting Sanctuary',
+    domain: 'career',
+    domainLabel: 'Career & Purpose',
+    badge: 'Work Sovereignty',
+    icon: '💼',
+    summary: 'Detaching self-worth from productivity metrics, establishing rigid 5 PM communication cutoffs, and preparing an exit.',
+    xPercent: 77,
+    yPercent: 48,
+    coreAnchor: 'Companies will replace you within two weeks if you work yourself into a hospital bed. Treat your job as a business contract, not a family.',
+    immediateStep: 'Remove Slack and work email from personal phone immediately. Set status to "Away / Focus Block".',
+    script: '"Thank you for reaching out. I have reached capacity on my prioritized deliverables for today and will review this tomorrow at 9 AM."',
+    warningSigns: [
+      'Crying on Sunday evenings in anticipation of Monday morning',
+      'Feeling cynical, numb, and physically fatigued every morning',
+      'Taking on extra unpaid emotional labor and organizing in the office'
+    ],
+    lifeline: 'Women in Tech & Leadership Allies Network',
+    relatedPackageId: 'career_pivot'
+  },
+  {
+    id: 'financial-sovereignty',
+    title: 'Financial Sovereignty & Secret Savings Enclave',
+    domain: 'financial',
+    domainLabel: 'Financial Independence',
+    badge: 'Financial Autonomy',
+    icon: '🗝️',
+    summary: 'Discreetly building an emergency cash runway and establishing separate banking away from controlling household partners.',
+    xPercent: 74,
+    yPercent: 74,
+    coreAnchor: 'Economic autonomy is the foundational prerequisite for physical and emotional freedom.',
+    immediateStep: 'Open a paperless savings account at a completely different financial institution than joint bank, opting for e-statements only.',
+    script: '"I am setting up an individual emergency reserve as part of standard financial health best practices."',
+    warningSigns: [
+      'Partner demanding to see receipts for everyday grocery runs',
+      'Hidden debts taken out under your name without explicit consent',
+      'Having zero access to tax filings or household account passwords'
+    ],
+    lifeline: 'Free Credit Report Check: AnnualCreditReport.com (Check for unauthorized accounts)',
+    relatedPackageId: 'financial_difficulties'
+  },
+  {
+    id: 'custody-evidence-log',
+    title: 'Custody Rights & Safe Evidentiary Journaling',
+    domain: 'legal',
+    domainLabel: 'Legal & Custody',
+    badge: 'Family Defense',
+    icon: '⚖️',
+    summary: 'Creating court-admissible, tamper-evident communication logs to protect custody and parental rights.',
+    xPercent: 26,
+    yPercent: 74,
+    coreAnchor: 'Courts do not care about who felt hurt; judges care about documentation, dates, times, and impact on children.',
+    immediateStep: 'Log incident notes in the offline SuperShakti Vault with neutral, factual descriptions: "On [Date] at [Time], [Person] arrived 45 mins late."',
+    script: '"Per our court-approved schedule, pick-up is at 4:00 PM at the neutral school entrance. I will see you there."',
+    warningSigns: [
+      'Threats to "take the kids away" or tell child protective services false stories',
+      'Unilateral cancellations of scheduled visitation without notice',
+      'Subtle alienation attempts turning children against you'
+    ],
+    lifeline: 'Legal Services Corporation: lsc.gov/find-legal-aid',
+    relatedPackageId: 'divorce_separation'
+  },
+  {
+    id: 'grief-pacing-anchor',
+    title: 'Grief Pacing & Sudden Shock Containment',
+    domain: 'grief',
+    domainLabel: 'Grief & Loss',
+    badge: 'Grief & Renewal',
+    icon: '🕊️',
+    summary: 'Allowing the tidal waves of grief without letting them wash away your baseline physical survival needs.',
+    xPercent: 50,
+    yPercent: 50,
+    coreAnchor: 'Grief is love with nowhere to go. It does not obey a 5-step linear timeline; it comes in unpredictable waves.',
+    immediateStep: 'Eat one spoonful of protein and drink one full glass of water. Give yourself permission to do nothing else for 12 hours.',
+    script: '"Thank you for checking in. I cannot talk on the phone today, but knowing you are thinking of me brings warmth."',
+    warningSigns: [
+      'Skipping meals for multiple consecutive days',
+      'Total isolation and ignoring all outreach from safe friends',
+      'Guilt over experiencing brief moments of relief or laughter'
+    ],
+    lifeline: '988 Crisis & Support Lifeline • Free 24/7 Call/Text',
+    relatedPackageId: 'loss_grief'
+  }
+];
 
+function renderMapScreen() {
   const filteredPlaces = getFilteredMapPlaces();
   const currentPlace = filteredPlaces.find(p => p.id === STATE.selectedPlaceId) || filteredPlaces[0] || null;
+  const currentAdviceNode = ADVICE_NODES.find(n => n.id === STATE.selectedAdviceNodeId) || ADVICE_NODES[0];
+  const availableStates = getStatesForCountry(STATE.mapCountry);
+  const availableCities = getCitiesForCountryAndState(STATE.mapCountry, STATE.mapState);
 
   return `
     <div class="map-screen-wrapper">
@@ -1738,9 +2148,18 @@ function renderMapScreen() {
         <div class="map-header-title-box">
           <h1>
             <span>Community Advice & Sanctuary Map</span>
-            <span class="verified-badge">Physical Sanctuaries</span>
+            <span class="verified-badge">${STATE.mapViewMode === 'radar' ? '8 Life Domains' : 'Physical Sanctuaries'}</span>
           </h1>
-          <p>Confidential physical drop-in centers for legal rights, career navigation, mental health, and sisterhood refuge.</p>
+          <p>Confidential guidance and physical refuge for legal rights, career navigation, mental health, and sisterhood sovereignty.</p>
+          
+          <div class="advice-map-mode-tabs">
+            <button class="advice-map-mode-tab ${STATE.mapViewMode === 'radar' ? 'active' : ''}" data-mode="radar">
+              <span>🌌</span> Advice Constellations (8 Domains)
+            </button>
+            <button class="advice-map-mode-tab ${STATE.mapViewMode === 'places' ? 'active' : ''}" data-mode="places">
+              <span>📍</span> Physical Sanctuaries (${ADVICE_PLACES.length})
+            </button>
+          </div>
         </div>
         <div class="map-privacy-pill">
           <span>🛡️</span>
@@ -1748,117 +2167,325 @@ function renderMapScreen() {
         </div>
       </div>
 
-      <!-- Controls & Instant Search Row -->
-      <div class="map-filters-row">
-        <div class="map-search-box">
-          <span class="map-search-icon">🔍</span>
-          <input
-            type="text"
-            id="map-search-input"
-            class="map-search-input"
-            placeholder="Search center name, city (e.g. San Francisco, London), or service..."
-            value="${STATE.mapSearchQuery || ''}"
-          />
-          <button id="map-search-clear" class="map-search-clear" title="Clear search" style="${STATE.mapSearchQuery ? 'display: block;' : 'display: none;'}">✕</button>
-        </div>
-
-        <select id="map-country-select" class="map-country-dropdown" title="Filter by Region">
-          <option value="ALL" ${STATE.mapCountry === 'ALL' ? 'selected' : ''}>🌍 All Regions (${ADVICE_PLACES.length})</option>
-          ${Object.values(COUNTRIES).map(c => `
-            <option value="${c.code}" ${STATE.mapCountry === c.code ? 'selected' : ''}>
-              ${c.flag} ${c.name} (${ADVICE_PLACES.filter(p => p.country === c.code).length})
-            </option>
-          `).join('')}
-        </select>
-      </div>
-
-      <!-- Category Filter Chips Strip -->
-      <div class="map-category-strip">
-        <button class="map-cat-chip ${STATE.mapCategory === 'ALL' ? 'active' : ''}" data-cat="ALL">
-          All (${countryFiltered.length})
-        </button>
-        ${Object.values(ADVICE_CATEGORIES).map(c => {
-          const count = countryFiltered.filter(p => p.category === c.key).length;
-          return `
-            <button class="map-cat-chip ${STATE.mapCategory === c.key ? 'active' : ''}" data-cat="${c.key}">
-              <span>${c.icon}</span> ${c.label} (${count})
-            </button>
-          `;
-        }).join('')}
-      </div>
-
-      <!-- Split Explorer Layout -->
-      <div class="map-explorer-layout">
-        <!-- Left Sidebar: Active Detail Card + Directory List -->
-        <div class="map-sidebar-panel">
-          <div id="selected-sanctuary-detail">
-            ${renderPlaceDetailCard(currentPlace)}
-          </div>
-
-          <div class="map-directory-header">
-            <span id="map-count-indicator">${filteredPlaces.length} verified sanctuaries</span>
-            <span style="font-size: 0.75rem; color: #94A3B8;">Click to focus on map</span>
-          </div>
-
-          <div id="places-grid-container" class="map-places-list">
-            ${filteredPlaces.length === 0 ? `
-              <div style="padding: 24px; text-align: center; color: var(--text-muted); background: white; border-radius: var(--radius-md); border: 1.5px dashed var(--border); font-size: 0.85rem;">
-                No verified centers match your filter. Try searching a different city or resetting filters.
+      ${STATE.mapViewMode === 'radar' ? `
+        <!-- Constellation Radar View -->
+        <div class="radar-layout">
+          <!-- Left: Visual Interactive Constellation Canvas -->
+          <div class="radar-stage-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="font-size: 0.82rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">
+                Interactive Advice Radar
               </div>
-            ` : filteredPlaces.map(p => {
-              const pCat = ADVICE_CATEGORIES[p.category] || ADVICE_CATEGORIES.COMMUNITY_SANCTUARY;
-              const isSelected = currentPlace && p.id === currentPlace.id;
-              return `
-                <div class="map-place-card ${isSelected ? 'active' : ''}" data-place-id="${p.id}">
-                  <div class="map-card-top">
-                    <div>
-                      <div class="map-card-name">${p.name}</div>
-                      <div class="map-card-sub">📍 ${p.city || p.countryName || p.country}</div>
+              <div style="font-size: 0.78rem; color: #7C3AED; font-weight: 600;">
+                Click any node to reveal tactical scripts
+              </div>
+            </div>
+
+            <div class="radar-canvas-container">
+              <div class="radar-sweep-line"></div>
+              <svg class="radar-rings" width="100%" height="100%" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="15" fill="none" stroke="#E2E8F0" stroke-width="0.8" stroke-dasharray="2,2" />
+                <circle cx="50" cy="50" r="30" fill="none" stroke="#E2E8F0" stroke-width="0.8" stroke-dasharray="2,2" />
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#CBD5E1" stroke-width="1" />
+                <line x1="50" y1="5" x2="50" y2="95" stroke="#F1F5F9" stroke-width="0.8" />
+                <line x1="5" y1="50" x2="95" y2="50" stroke="#F1F5F9" stroke-width="0.8" />
+              </svg>
+
+              ${ADVICE_NODES.map(node => {
+                const isSelected = node.id === currentAdviceNode.id;
+                return `
+                  <button 
+                    class="radar-node-btn ${isSelected ? 'active' : ''}" 
+                    data-node-id="${node.id}"
+                    style="left: ${node.xPercent}%; top: ${node.yPercent}%;"
+                    title="${node.title} • ${node.domainLabel}"
+                    aria-label="${node.badge}: ${node.title}"
+                  >
+                    <div class="radar-node-icon-wrapper">
+                      <span class="radar-node-icon">${node.icon}</span>
+                      ${isSelected ? '<span class="radar-active-pulse"></span>' : ''}
                     </div>
-                    <span style="font-size: 1.15rem;">${pCat.icon}</span>
-                  </div>
-                  <div class="map-card-advice">${p.adviceType}</div>
-                  <div class="map-card-footer">
-                    <span style="font-weight: 700; color: ${isSelected ? 'var(--primary)' : '#6B7280'};">
-                      ${isSelected ? '● Active on Map' : 'Tap to focus'}
-                    </span>
-                    <span style="color: #6B7280; font-weight: 600;">${p.phone}</span>
-                  </div>
-                </div>
-              `;
-            }).join('')}
+                    <span class="radar-node-badge">${node.badge}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Right: Detailed Guidance & Boundary Script Panel -->
+          <div class="radar-detail-panel">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <span class="persona-badge">${currentAdviceNode.domainLabel}</span>
+                <h2 style="font-size: 1.25rem; font-weight: 800; color: #0F172A; margin: 6px 0;">
+                  ${currentAdviceNode.title}
+                </h2>
+              </div>
+            </div>
+
+            <div style="background: #F1F5F9; border-radius: 8px; padding: 12px; font-size: 0.88rem; color: #334155; line-height: 1.5;">
+              <strong>Core Truth:</strong> ${currentAdviceNode.coreAnchor}
+            </div>
+
+            <div style="margin-top: 4px;">
+              <div style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: #059669; letter-spacing: 0.5px; margin-bottom: 4px;">
+                ⚡ Immediate 30-Second Somatic Step
+              </div>
+              <p style="font-size: 0.92rem; color: #1E293B; line-height: 1.5; margin: 0;">
+                ${currentAdviceNode.immediateStep}
+              </p>
+            </div>
+
+            <div>
+              <div style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: #7C3AED; letter-spacing: 0.5px; margin-bottom: 6px;">
+                💬 Word-For-Word Boundary Script
+              </div>
+              <div class="script-quote-card">
+                ${currentAdviceNode.script}
+              </div>
+              <button class="copy-script-btn" data-script="${encodeURIComponent(currentAdviceNode.script)}">
+                <span>📋</span> Copy Script to Clipboard
+              </button>
+            </div>
+
+            <div>
+              <div style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; color: #E11D48; letter-spacing: 0.5px; margin-bottom: 6px;">
+                ⚠️ Warning Signs to Watch For
+              </div>
+              <ul style="margin: 0; padding-left: 18px; font-size: 0.86rem; color: #475569; display: flex; flex-direction: column; gap: 4px;">
+                ${currentAdviceNode.warningSigns.map(w => `<li>${w}</li>`).join('')}
+              </ul>
+            </div>
+
+            <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 8px; padding: 10px 14px; font-size: 0.84rem; color: #92400E; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <span>📞 <strong>24/7 Lifeline:</strong> ${currentAdviceNode.lifeline}</span>
+            </div>
+
+            ${currentAdviceNode.relatedPackageId ? `
+              <button class="match-btn" data-open-package="${currentAdviceNode.relatedPackageId}" style="width: 100%; margin-top: 8px;">
+                Open Related Sanctuary Package
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      ` : `
+        <!-- Controls & Instant Search Row -->
+        <div class="map-filters-row">
+          <div class="map-search-box">
+            <span class="map-search-icon">🔍</span>
+            <input
+              type="text"
+              id="map-search-input"
+              class="map-search-input"
+              placeholder="Search center name, city (e.g. San Francisco, London), or service..."
+              value="${STATE.mapSearchQuery || ''}"
+            />
+            <button id="map-search-clear" class="map-search-clear" title="Clear search" style="${STATE.mapSearchQuery ? 'display: block;' : 'display: none;'}">✕</button>
+          </div>
+
+          <!-- Country, State, and City Unified Selectors -->
+          <div class="map-location-cascade">
+            <!-- 1. Country Selector -->
+            <div class="map-select-wrapper">
+              <label for="map-country-select" class="map-select-label">Country</label>
+              <select id="map-country-select" class="map-cascade-select" title="Filter by Country">
+                <option value="ALL" ${STATE.mapCountry === 'ALL' ? 'selected' : ''}>🌍 All Countries (${ADVICE_PLACES.length})</option>
+                ${Object.values(COUNTRIES).map(c => `
+                  <option value="${c.code}" ${STATE.mapCountry === c.code ? 'selected' : ''}>
+                    ${COUNTRY_FLAGS[c.code] || '🌍'} ${c.name} (${ADVICE_PLACES.filter(p => p.country === c.code).length})
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+
+            <!-- 2. State / Province Selector -->
+            <div class="map-select-wrapper">
+              <label for="map-state-select" class="map-select-label">State / Province</label>
+              <select id="map-state-select" class="map-cascade-select" title="Filter by State or Province">
+                <option value="ALL" ${STATE.mapState === 'ALL' ? 'selected' : ''}>🏛️ All States / Regions (${availableStates.reduce((sum, s) => sum + s.count, 0)})</option>
+                ${availableStates.map(s => `
+                  <option value="${s.name}" ${STATE.mapState === s.name ? 'selected' : ''}>
+                    ${s.name}${s.count > 0 ? ` (${s.count})` : ''}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+
+            <!-- 3. City Selector -->
+            <div class="map-select-wrapper">
+              <label for="map-city-select" class="map-select-label">City</label>
+              <select id="map-city-select" class="map-cascade-select" title="Filter by City">
+                <option value="ALL" ${STATE.mapCity === 'ALL' ? 'selected' : ''}>📍 All Cities (${availableCities.reduce((sum, c) => sum + c.count, 0)})</option>
+                ${availableCities.map(c => `
+                  <option value="${c.name}" ${STATE.mapCity === c.name ? 'selected' : ''}>
+                    ${c.name}${c.count > 0 ? ` (${c.count})` : ''}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
           </div>
         </div>
 
-        <!-- Right Viewport: Sticky Map Canvas -->
-        <div class="map-viewport-panel" id="map-canvas">
-          <button class="map-floating-recenter" id="map-recenter-btn" title="Fit all visible markers into view">
-            <span>⛶</span> Fit All Sanctuaries
+        <!-- Breadcrumbs Container -->
+        <div id="map-breadcrumbs-container">
+          ${renderMapBreadcrumbsHtml()}
+        </div>
+
+        <!-- Category Filter Chips Strip -->
+        <div class="map-category-strip">
+          <button class="map-cat-chip ${STATE.mapCategory === 'ALL' ? 'active' : ''}" data-cat="ALL">
+            All (${filteredPlaces.length})
           </button>
-          <div id="leaflet-map"></div>
-          <div id="fallback-canvas" style="display: none; position: absolute; inset: 0;">
-            <div class="map-grid-bg"></div>
-            ${filteredPlaces.map(p => {
-              const pCat = ADVICE_CATEGORIES[p.category] || ADVICE_CATEGORIES.COMMUNITY_SANCTUARY;
-              const leftPercent = (p.mapCoordX * 100).toFixed(1);
-              const topPercent = (p.mapCoordY * 100).toFixed(1);
-              const isSelected = currentPlace && p.id === currentPlace.id;
-              return `
-                <div class="map-pin ${isSelected ? 'active' : ''}" data-place-id="${p.id}" style="left: ${leftPercent}%; top: ${topPercent}%;">
-                  <div class="map-pin-body" style="background: ${pCat.color};">
-                    <span class="map-pin-icon">${pCat.icon}</span>
+          ${Object.values(ADVICE_CATEGORIES).map(c => {
+            const count = filteredPlaces.filter(p => p.category === c.key).length;
+            return `
+              <button class="map-cat-chip ${STATE.mapCategory === c.key ? 'active' : ''}" data-cat="${c.key}">
+                <span>${c.icon}</span> ${c.label} (${count})
+              </button>
+            `;
+          }).join('')}
+        </div>
+
+        <!-- Split Explorer Layout -->
+        <div class="map-explorer-layout">
+          <!-- Left Sidebar: Active Detail Card + Directory List -->
+          <div class="map-sidebar-panel">
+            <div id="selected-sanctuary-detail">
+              ${renderPlaceDetailCard(currentPlace)}
+            </div>
+
+            <div class="map-directory-header">
+              <span id="map-count-indicator">${filteredPlaces.length} verified sanctuaries</span>
+              <span style="font-size: 0.75rem; color: #94A3B8;">Click to focus on map</span>
+            </div>
+
+            <div id="places-grid-container" class="map-places-list">
+              ${filteredPlaces.length === 0 ? `
+                <div style="padding: 24px 18px; text-align: center; background: white; border-radius: var(--radius-md); border: 1.5px solid #E2E8F0; box-shadow: var(--shadow-sm);">
+                  <div style="font-size: 2rem; margin-bottom: 8px;">🛡️</div>
+                  <div style="font-weight: 700; color: #1E293B; font-size: 0.92rem; margin-bottom: 4px;">
+                    Statewide & National Sanctuary Coverage Active
                   </div>
+                  <div style="color: #64748B; font-size: 0.8rem; line-height: 1.5; margin-bottom: 12px;">
+                    No physical walk-in pins are currently registered for <strong>${STATE.mapCity !== 'ALL' ? STATE.mapCity + ', ' : ''}${STATE.mapState !== 'ALL' ? STATE.mapState : 'this region'}</strong>, but 24/7 crisis hotlines, emergency dispatch, and legal referral networks are 100% active here.
+                  </div>
+                  <button class="action-btn action-btn-secondary" id="empty-state-reset-btn" style="font-size: 0.78rem; padding: 6px 14px; margin: 0 auto; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <span>↩</span> Show All Centers in ${countryObj?.name || 'Country'}
+                  </button>
                 </div>
-              `;
-            }).join('')}
+              ` : filteredPlaces.map(p => {
+                const pCat = ADVICE_CATEGORIES[p.category] || ADVICE_CATEGORIES.COMMUNITY_SANCTUARY;
+                const isSelected = currentPlace && p.id === currentPlace.id;
+                return `
+                  <div class="map-place-card ${isSelected ? 'active' : ''}" data-place-id="${p.id}">
+                    <div class="map-card-top">
+                      <div>
+                        <div class="map-card-name">${p.name}</div>
+                        <div class="map-card-sub">📍 ${p.city || p.countryName || p.country}</div>
+                      </div>
+                      <span style="font-size: 1.15rem;">${pCat.icon}</span>
+                    </div>
+                    <div class="map-card-advice">${p.adviceType}</div>
+                    <div class="map-card-footer">
+                      <span style="font-weight: 700; color: ${isSelected ? 'var(--primary)' : '#6B7280'};">
+                        ${isSelected ? '● Active on Map' : 'Tap to focus'}
+                      </span>
+                      <span style="color: #6B7280; font-weight: 600;">${p.phone}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Right Viewport: Sticky Map Canvas -->
+          <div class="map-viewport-panel" id="map-canvas">
+            <button class="map-floating-recenter" id="map-recenter-btn" title="Fit all visible markers into view">
+              <span>⛶</span> Fit All Sanctuaries
+            </button>
+            <div id="leaflet-map"></div>
+            <div class="map-privacy-watermark">
+              <span>🛡️</span>
+              <span>Confidential Sanctuary Map • 100% Private (Zero 3rd-party tile tracking)</span>
+            </div>
+            <div id="fallback-canvas" style="display: none; position: absolute; inset: 0;">
+              <div class="map-grid-bg"></div>
+              ${filteredPlaces.map(p => {
+                const pCat = ADVICE_CATEGORIES[p.category] || ADVICE_CATEGORIES.COMMUNITY_SANCTUARY;
+                const leftPercent = (p.mapCoordX * 100).toFixed(1);
+                const topPercent = (p.mapCoordY * 100).toFixed(1);
+                const isSelected = currentPlace && p.id === currentPlace.id;
+                return `
+                  <div class="map-pin ${isSelected ? 'active' : ''}" data-place-id="${p.id}" style="left: ${leftPercent}%; top: ${topPercent}%;">
+                    <div class="map-pin-body" style="background: ${pCat.color};">
+                      <span class="map-pin-icon">${pCat.icon}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
         </div>
-      </div>
+      `}
     </div>
   `;
 }
 
 function attachMapListeners() {
+  // Mode switcher tabs
+  document.querySelectorAll('.advice-map-mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      STATE.mapViewMode = tab.dataset.mode;
+      renderApp();
+    });
+  });
+
+  if (STATE.mapViewMode === 'radar') {
+    // Radar node clicks
+    document.querySelectorAll('.radar-node-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        STATE.selectedAdviceNodeId = btn.dataset.nodeId;
+        renderApp();
+      });
+    });
+
+    // Copy script button
+    document.querySelectorAll('.copy-script-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const textToCopy = decodeURIComponent(btn.dataset.script || '');
+        if (textToCopy) {
+          try {
+            await navigator.clipboard.writeText(textToCopy);
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<span>✓</span> Copied to clipboard!';
+            btn.style.background = '#10B981';
+            btn.style.color = '#FFFFFF';
+            setTimeout(() => {
+              btn.innerHTML = originalHTML;
+              btn.style.background = '';
+              btn.style.color = '';
+            }, 2000);
+          } catch (e) {
+            console.warn('Clipboard copy failed:', e);
+          }
+        }
+      });
+    });
+
+    // Open related package
+    document.querySelectorAll('[data-open-package]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pkgId = btn.dataset.openPackage;
+        const pkg = findPackageById(pkgId);
+        if (pkg) {
+          openPackageModal(pkg);
+        }
+      });
+    });
+
+    return;
+  }
+
   const filteredPlaces = getFilteredMapPlaces();
   const currentPlace = filteredPlaces.find(p => p.id === STATE.selectedPlaceId) || filteredPlaces[0] || null;
 
@@ -1869,10 +2496,51 @@ function attachMapListeners() {
   if (countrySelect) {
     countrySelect.addEventListener('change', (e) => {
       STATE.mapCountry = e.target.value;
+      STATE.mapState = 'ALL';
+      STATE.mapCity = 'ALL';
       STATE.selectedPlaceId = null;
+      persistState();
       updateMapFilters();
     });
   }
+
+  // 1b. State / Province Dropdown
+  const stateSelect = document.getElementById('map-state-select');
+  if (stateSelect) {
+    stateSelect.addEventListener('change', (e) => {
+      STATE.mapState = e.target.value;
+      STATE.mapCity = 'ALL';
+      STATE.selectedPlaceId = null;
+      persistState();
+      updateMapFilters();
+    });
+  }
+
+  // 1c. City Dropdown
+  const citySelect = document.getElementById('map-city-select');
+  if (citySelect) {
+    citySelect.addEventListener('change', (e) => {
+      STATE.mapCity = e.target.value;
+      STATE.selectedPlaceId = null;
+      persistState();
+      updateMapFilters();
+    });
+  }
+
+  // Reset button inside empty coverage notice
+  const emptyStateResetBtn = document.getElementById('empty-state-reset-btn');
+  if (emptyStateResetBtn) {
+    emptyStateResetBtn.addEventListener('click', () => {
+      STATE.mapState = 'ALL';
+      STATE.mapCity = 'ALL';
+      STATE.mapSearchQuery = '';
+      persistState();
+      updateMapFilterDropdowns();
+      updateMapFilters();
+    });
+  }
+
+  attachBreadcrumbListeners();
 
   // 2. Real-Time Search Input
   const searchInput = document.getElementById('map-search-input');
@@ -2114,58 +2782,189 @@ function openCountrySelectorModal() {
   const container = document.getElementById('modal-container');
   if (!container) return;
 
-  container.innerHTML = `
-    <div class="modal-overlay">
-      <div class="modal-card" style="max-width: 520px;">
-        <div class="modal-header">
-          <div style="font-weight: 800; font-size: 1.15rem; color: var(--text-main);">
-            Select Your Country / Region
+  // Local state for the modal until user confirms
+  let modalCountry = STATE.country || 'US';
+  let modalState = STATE.mapState || 'ALL';
+  let modalCity = STATE.mapCity || 'ALL';
+
+  function renderModalContent() {
+    const states = getStatesForCountry(modalCountry);
+    const totalStateCount = states.reduce((sum, s) => sum + s.count, 0);
+
+    const cities = getCitiesForCountryAndState(modalCountry, modalState);
+    const totalCityCount = cities.reduce((sum, c) => sum + c.count, 0);
+
+    const countryObj = COUNTRIES[modalCountry] || COUNTRIES['US'];
+    const flag = COUNTRY_FLAGS[modalCountry] || '🌍';
+    const emergencyNum = countryObj?.emergency || '911';
+    const helplineCount = countryObj?.crisisHelplines?.length || 0;
+    const placesInCountry = ADVICE_PLACES.filter(p => {
+      const code = modalCountry === 'UK' ? 'GB' : modalCountry;
+      return p.country === code || (code === 'GB' && p.country === 'UK');
+    }).length;
+
+    container.innerHTML = `
+      <div class="modal-overlay">
+        <div class="modal-card" style="max-width: 540px; border-radius: var(--radius-lg); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+          <div class="modal-header" style="border-bottom: 1px solid #F1F5F9; padding-bottom: 14px; margin-bottom: 14px;">
+            <div style="font-weight: 800; font-size: 1.15rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+              <span>📍</span> Select Your Location
+            </div>
+            <button class="modal-close-btn" id="close-country-modal" title="Close" aria-label="Close dialog">&times;</button>
           </div>
-          <button class="modal-close-btn" id="close-country-modal">&times;</button>
-        </div>
 
-        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
-          SuperShakti is global! Choosing your country will immediately configure crisis emergency numbers, localized helplines, and regional advice centers.
-        </p>
+          <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
+            Configure your country, state, and city all together to localize emergency numbers, 24/7 crisis hotlines, and safe walk-in sanctuary centers.
+          </p>
 
-        <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 16px; font-size: 0.8rem; color: #166534;">
-          <strong>Zero-Tracking:</strong> Your choice is stored only in this browser. We do NOT track or detect your location via IP address or GPS.
-        </div>
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-md); padding: 9px 12px; margin-bottom: 16px; font-size: 0.78rem; color: #166534; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.05rem;">🔒</span>
+            <div>
+              <strong>Zero-Tracking Privacy:</strong> Stored strictly in your browser. We never track your IP address or GPS coordinates.
+            </div>
+          </div>
 
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          ${Object.values(COUNTRIES).map(c => `
-            <div class="country-option-item ${STATE.country === c.code ? 'active' : ''}" data-code="${c.code}" style="border: 1px solid ${STATE.country === c.code ? 'var(--primary)' : 'var(--border)'}; background: ${STATE.country === c.code ? 'rgba(124, 58, 237, 0.06)' : 'white'}; border-radius: var(--radius-md); padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s ease;">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 1.6rem;">${c.flag}</span>
-                <div>
-                  <div style="font-weight: 700; color: var(--text-main); font-size: 0.95rem;">${c.name}</div>
-                  <div style="font-size: 0.8rem; color: var(--text-muted);">
-                     Emergency: ${c.emergency} • Helplines: ${c.crisisHelplines.length} verified
-                  </div>
+          <!-- Country, State, and City Unified Form -->
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #FAF5FF; border: 1.5px solid #E9D5FF; border-radius: var(--radius-md);">
+            <div style="font-weight: 700; font-size: 0.88rem; color: #6B21A8; display: flex; align-items: center; justify-content: space-between;">
+              <span>🌍 Country, State & City</span>
+              <span style="font-size: 0.74rem; font-weight: 600; color: #7E22CE;">All In One View</span>
+            </div>
+
+            <!-- 1. Country -->
+            <div>
+              <label for="modal-country-select" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6B21A8; display: block; margin-bottom: 4px; letter-spacing: 0.04em;">
+                Country
+              </label>
+              <select id="modal-country-select" style="width: 100%; padding: 9px 12px; font-size: 0.88rem; border-radius: 8px; border: 1.5px solid #D8B4FE; background: white; font-weight: 600; color: #1E293B; cursor: pointer; outline: none;">
+                ${Object.values(COUNTRIES).map(c => {
+                  const cFlag = COUNTRY_FLAGS[c.code] || '🌍';
+                  const cCount = ADVICE_PLACES.filter(p => p.country === c.code).length;
+                  return `
+                    <option value="${c.code}" ${modalCountry === c.code ? 'selected' : ''}>
+                      ${cFlag} ${c.name} (${cCount} sanctuaries)
+                    </option>
+                  `;
+                }).join('')}
+              </select>
+            </div>
+
+            <!-- 2. State / Province -->
+            <div>
+              <label for="modal-state-select" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6B21A8; display: block; margin-bottom: 4px; letter-spacing: 0.04em;">
+                State / Province
+              </label>
+              <select id="modal-state-select" style="width: 100%; padding: 9px 12px; font-size: 0.88rem; border-radius: 8px; border: 1.5px solid #D8B4FE; background: white; font-weight: 600; color: #1E293B; cursor: pointer; outline: none;">
+                <option value="ALL" ${modalState === 'ALL' ? 'selected' : ''}>🏛️ All States / Regions (${totalStateCount})</option>
+                ${states.map(s => `
+                  <option value="${s.name}" ${modalState === s.name ? 'selected' : ''}>
+                    ${s.name}${s.count > 0 ? ` (${s.count} centers)` : ''}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+
+            <!-- 3. City -->
+            <div>
+              <label for="modal-city-select" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #6B21A8; display: block; margin-bottom: 4px; letter-spacing: 0.04em;">
+                City
+              </label>
+              <select id="modal-city-select" style="width: 100%; padding: 9px 12px; font-size: 0.88rem; border-radius: 8px; border: 1.5px solid #D8B4FE; background: white; font-weight: 600; color: #1E293B; cursor: pointer; outline: none;">
+                <option value="ALL" ${modalCity === 'ALL' ? 'selected' : ''}>📍 All Cities (${totalCityCount})</option>
+                ${cities.map(c => `
+                  <option value="${c.name}" ${modalCity === c.name ? 'selected' : ''}>
+                    ${c.name}${c.count > 0 ? ` (${c.count} centers)` : ''}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          </div>
+
+          <!-- Live Region Safety Snapshot Card -->
+          <div style="margin-top: 14px; padding: 12px 14px; background: white; border: 1px solid #E2E8F0; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.6rem;">${flag}</span>
+              <div>
+                <div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">
+                  ${countryObj?.name || modalCountry}
+                  ${modalState !== 'ALL' ? `<span style="font-weight: 500; color: #64748B;"> › ${modalState}</span>` : ''}
+                  ${modalCity !== 'ALL' ? `<span style="font-weight: 500; color: #64748B;"> › ${modalCity}</span>` : ''}
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                  Emergency: <strong style="color: #E11D48;">${emergencyNum}</strong> • Helplines: <strong>${helplineCount} verified</strong>
                 </div>
               </div>
-              ${STATE.country === c.code ? '<span style="color: var(--primary); font-weight: 800;"> Active</span>' : '<span style="color: #9CA3AF;">Select →</span>'}
             </div>
-          `).join('')}
+            <div style="font-size: 0.76rem; background: #F1F5F9; color: #475569; padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+              ${placesInCountry} Sanctuaries
+            </div>
+          </div>
+
+          <!-- Modal Action Buttons -->
+          <div style="margin-top: 16px; display: flex; gap: 10px; justify-content: flex-end;">
+            <button id="modal-cancel-btn" style="padding: 9px 18px; background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+              Cancel
+            </button>
+            <button id="modal-save-location-btn" style="padding: 9px 22px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);">
+              Save & Apply Location
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
 
-  document.getElementById('close-country-modal').addEventListener('click', () => {
-    container.innerHTML = '';
-  });
-
-  document.querySelectorAll('.country-option-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const code = item.dataset.code;
-      STATE.country = code;
-      STATE.mapCountry = code;
-      persistState();
+    // Event listeners inside modal
+    document.getElementById('close-country-modal')?.addEventListener('click', () => {
       container.innerHTML = '';
-      renderApp();
     });
-  });
+    document.getElementById('modal-cancel-btn')?.addEventListener('click', () => {
+      container.innerHTML = '';
+    });
+
+    const countrySelect = document.getElementById('modal-country-select');
+    const stateSelect = document.getElementById('modal-state-select');
+    const citySelect = document.getElementById('modal-city-select');
+
+    if (countrySelect) {
+      countrySelect.addEventListener('change', () => {
+        modalCountry = countrySelect.value;
+        modalState = 'ALL';
+        modalCity = 'ALL';
+        renderModalContent();
+      });
+    }
+
+    if (stateSelect) {
+      stateSelect.addEventListener('change', () => {
+        modalState = stateSelect.value;
+        modalCity = 'ALL';
+        renderModalContent();
+      });
+    }
+
+    if (citySelect) {
+      citySelect.addEventListener('change', () => {
+        modalCity = citySelect.value;
+        renderModalContent();
+      });
+    }
+
+    const saveBtn = document.getElementById('modal-save-location-btn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        STATE.country = modalCountry;
+        STATE.mapCountry = modalCountry;
+        STATE.mapState = modalState;
+        STATE.mapCity = modalCity;
+        STATE.selectedPlaceId = null;
+        persistState();
+        container.innerHTML = '';
+        renderApp();
+      });
+    }
+  }
+
+  renderModalContent();
 }
 
 function openPeerRequestModal(pkg) {
@@ -2405,10 +3204,10 @@ function openReportModal(pkg, res) {
                 
                 <div>
                   <div style="font-weight: 700; font-size: 0.88rem; color: #4338CA;">
-                    AI Personalized Action Insights (Optional)
+                    AI Personalized Action Insights (Opt-In Only)
                   </div>
                   <div style="font-size: 0.76rem; color: #6B7280;">
-                    SuperShakti is 100% offline. Google Gemini API is optional for personalized affirmations.
+                    SuperShakti is 100% offline by default. AI is strictly opt-in. Information sent: only the package title and feeling keywords. Never your private reflections, IP address, or identity.
                   </div>
                 </div>
               </div>

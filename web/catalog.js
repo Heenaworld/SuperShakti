@@ -1,4 +1,8 @@
 // SuperShakti Catalog Dataset (Global Support, Real Coordinates, Zero Emojis)
+import { GEOGRAPHIC_DIRECTORY, getAllStatesForCountry, getAllCitiesForCountryAndState, normalizeCountryCode } from './geoData.js';
+
+export { GEOGRAPHIC_DIRECTORY, getAllStatesForCountry, getAllCitiesForCountryAndState };
+
 export const COUNTRIES = {
   "US": {
     "code": "US",
@@ -7,7 +11,7 @@ export const COUNTRIES = {
     "emergency": "911",
     "crisisHelplines": [
       {
-        "name": "988 Suicide & Crisis Lifeline",
+        "name": "988 Crisis & Support Lifeline",
         "number": "988",
         "hours": "24/7 Call or Text 988 (English & Spanish)",
         "description": "Free, confidential 24/7 support for emotional distress, panic, or crisis.",
@@ -92,10 +96,10 @@ export const COUNTRIES = {
     "emergency": "911",
     "crisisHelplines": [
       {
-        "name": "988 Suicide Crisis Helpline Canada",
+        "name": "988 Crisis Helpline Canada",
         "number": "988",
         "hours": "24/7 Call or Text 988 (English & French)",
-        "description": "Bilingual nationwide suicide prevention and crisis distress service.",
+        "description": "Bilingual nationwide crisis distress and mental health support service.",
         "isTollFree": true,
         "sms": "988"
       },
@@ -136,7 +140,7 @@ export const COUNTRIES = {
       {
         "name": "Lifeline Australia",
         "number": "13 11 14",
-        "hours": "24/7 Crisis Support & Suicide Prevention",
+        "hours": "24/7 Crisis Support & Life Assistance",
         "description": "Free, confidential telephone crisis support service available across all states.",
         "isTollFree": true,
         "sms": "0477 13 11 14"
@@ -888,7 +892,7 @@ export const SUPPORT_PACKAGES = [
       "slidingScale": true
     },
     "helpline": {
-      "name": "988 Suicide & Crisis Lifeline",
+      "name": "988 Crisis & Support Lifeline",
       "number": "988",
       "hours": "24/7 Call or Text Free & Confidential",
       "description": "Immediate 24/7 support for emotional distress, overwhelming burnout, or severe mental health strain.",
@@ -1798,7 +1802,10 @@ export const ADVICE_PLACES = [
       "Free immigration, tenancy & family legal rights counseling",
       "Confidential physical sanctuary & community garden",
       "Direct referral to sliding-scale mental health counseling"
-    ]
+    ],
+    "state": "California",
+    "stateCode": "CA",
+    "cityName": "San Francisco"
   },
   {
     "id": "place_la_downtown_womens_center",
@@ -1821,7 +1828,10 @@ export const ADVICE_PLACES = [
       "Trauma recovery counseling and peer support groups",
       "Direct job readiness training and social enterprise employment",
       "On-site primary care and mental health access"
-    ]
+    ],
+    "state": "California",
+    "stateCode": "CA",
+    "cityName": "Los Angeles"
   },
   {
     "id": "place_seattle_legal_aid",
@@ -1844,7 +1854,10 @@ export const ADVICE_PLACES = [
       "Assistance with emergency civil protection orders",
       "Immigration U-Visa & VAWA legal counseling",
       "Safe family law guidance and court navigation"
-    ]
+    ],
+    "state": "Washington",
+    "stateCode": "WA",
+    "cityName": "Seattle"
   },
   {
     "id": "place_workplace_legal_aid",
@@ -1867,7 +1880,10 @@ export const ADVICE_PLACES = [
       "Counseling on pregnancy accommodations and parental leave",
       "Legal recourse for sexual harassment and retaliation",
       "Remote and gig-worker wage rights advocacy"
-    ]
+    ],
+    "state": "California",
+    "stateCode": "CA",
+    "cityName": "San Francisco"
   },
   {
     "id": "place_sanctuary_families_ny",
@@ -1890,7 +1906,10 @@ export const ADVICE_PLACES = [
       "Crisis intervention and safety planning sanctuary",
       "Children and mothers healing cohorts",
       "Holistic wellness workshops and emotional resilience building"
-    ]
+    ],
+    "state": "New York",
+    "stateCode": "NY",
+    "cityName": "New York"
   },
   {
     "id": "place_us_dress_for_success_ny",
@@ -1913,7 +1932,10 @@ export const ADVICE_PLACES = [
       "Job search strategies and resume optimization clinics",
       "Financial literacy and economic independence workshops",
       "Global network of professional women mentors"
-    ]
+    ],
+    "state": "New York",
+    "stateCode": "NY",
+    "cityName": "New York"
   },
   {
     "id": "place_us_chicago_womens_health",
@@ -1936,7 +1958,218 @@ export const ADVICE_PLACES = [
       "Integrative alternative therapies: acupuncture and bodywork",
       "Trauma-informed counseling and support circles",
       "Empowered, patient-centered health education"
-    ]
+    ],
+    "state": "Illinois",
+    "stateCode": "IL",
+    "cityName": "Chicago"
+  },
+  {
+    "id": "place_tx_safe_alliance_austin",
+    "name": "The SAFE Alliance Women & Family Sanctuary",
+    "category": "CRISIS_SHELTER",
+    "country": "US",
+    "countryName": "United States",
+    "city": "Austin, TX",
+    "address": "4800 Manor Rd, Austin, TX 78723",
+    "lat": 30.2974,
+    "lng": -97.7027,
+    "mapCoordX": 0.52,
+    "mapCoordY": 0.72,
+    "phone": "+1 512-267-7233",
+    "website": "https://www.safeaustin.org",
+    "hours": "24/7 Crisis Hotline & Walk-in Emergency Refuge",
+    "adviceType": "Emergency refuge shelter, trauma counseling, sexual assault forensic clinic",
+    "keyAdviceOffered": [
+      "24/7 confidential safety planning and emergency refuge",
+      "Specialized legal representation for protective orders",
+      "Free medical forensic clinic with trauma advocates",
+      "Children and family healing counseling programs"
+    ],
+    "state": "Texas",
+    "stateCode": "TX",
+    "cityName": "Austin"
+  },
+  {
+    "id": "place_tx_houston_area_womens_center",
+    "name": "Houston Area Women's Center (HAWC)",
+    "category": "COMMUNITY_SANCTUARY",
+    "country": "US",
+    "countryName": "United States",
+    "city": "Houston, TX",
+    "address": "1010 Waugh Dr, Houston, TX 77019",
+    "lat": 29.7578,
+    "lng": -95.3986,
+    "mapCoordX": 0.55,
+    "mapCoordY": 0.75,
+    "phone": "+1 713-528-2121",
+    "website": "https://hawc.org",
+    "hours": "24/7 Crisis Hotline & Day Resource Center",
+    "adviceType": "Emergency housing, crisis hotline, hospital accompaniment, legal advocacy",
+    "keyAdviceOffered": [
+      "Free, confidential 24-hour crisis helpline",
+      "Safe emergency shelter and supportive housing",
+      "Accompaniment for survivors at hospitals and police stations",
+      "Comprehensive career navigation and violence prevention"
+    ],
+    "state": "Texas",
+    "stateCode": "TX",
+    "cityName": "Houston"
+  },
+  {
+    "id": "place_fl_lotus_house_miami",
+    "name": "Lotus House Women & Children Sanctuary",
+    "category": "CRISIS_SHELTER",
+    "country": "US",
+    "countryName": "United States",
+    "city": "Miami, FL",
+    "address": "217 NW 15th St, Miami, FL 33136",
+    "lat": 25.7901,
+    "lng": -80.1982,
+    "mapCoordX": 0.82,
+    "mapCoordY": 0.86,
+    "phone": "+1 305-438-0556",
+    "website": "https://lotushouse.org",
+    "hours": "Daily: 24 Hours Intake & Healing Center",
+    "adviceType": "Holistic shelter sanctuary, trauma counseling, maternal healthcare, job training",
+    "keyAdviceOffered": [
+      "Dedicated, dignified sanctuary exclusively for women and infants",
+      "Trauma-informed counseling and youth arts therapies",
+      "Full maternal health navigation and pediatric clinics",
+      "Job readiness and social enterprise pathways"
+    ],
+    "state": "Florida",
+    "stateCode": "FL",
+    "cityName": "Miami"
+  },
+  {
+    "id": "place_ga_wrc_atlanta",
+    "name": "Women's Resource Center to End Domestic Violence",
+    "category": "COMMUNITY_SANCTUARY",
+    "country": "US",
+    "countryName": "United States",
+    "city": "Atlanta, GA",
+    "address": "PO Box 171, Decatur, GA 30031 (Safe Address Dispatch)",
+    "lat": 33.7748,
+    "lng": -84.2963,
+    "mapCoordX": 0.71,
+    "mapCoordY": 0.62,
+    "phone": "+1 404-688-9436",
+    "website": "https://www.wrcdv.org",
+    "hours": "24/7 Crisis Hotline & Safe Emergency Refuge",
+    "adviceType": "24/7 Safe housing, legal clinic, emotional support, rapid financial micro-grants",
+    "keyAdviceOffered": [
+      "24-hour confidential crisis intervention & emergency housing",
+      "Direct court advocacy for temporary protective orders",
+      "Emergency financial assistance and transport vouchers",
+      "Weekly survivor-led empowerment and support circles"
+    ],
+    "state": "Georgia",
+    "stateCode": "GA",
+    "cityName": "Atlanta"
+  },
+  {
+    "id": "place_pa_women_against_abuse_philly",
+    "name": "Women Against Abuse Legal Center & Sanctuary",
+    "category": "LEGAL_RIGHTS",
+    "country": "US",
+    "countryName": "United States",
+    "city": "Philadelphia, PA",
+    "address": "100 S Broad St 5th Floor, Philadelphia, PA 19110",
+    "lat": 39.9509,
+    "lng": -75.1636,
+    "mapCoordX": 0.81,
+    "mapCoordY": 0.36,
+    "phone": "+1 866-723-3014",
+    "website": "https://www.womenagainstabuse.org",
+    "hours": "Mon-Fri: 9:00 AM - 5:00 PM EST (24/7 Hotline)",
+    "adviceType": "Free legal representation, emergency safe havens, trauma therapy, emergency shelter",
+    "keyAdviceOffered": [
+      "Free victim legal representation in Philadelphia family court",
+      "Emergency confidential safe havens for individuals and children",
+      "Community education and behavioral health therapy",
+      "Philadelphia domestic violence crisis hotline dispatch"
+    ],
+    "state": "Pennsylvania",
+    "stateCode": "PA",
+    "cityName": "Philadelphia"
+  },
+  {
+    "id": "place_ma_casa_myrna_boston",
+    "name": "Casa Myrna Women's Sanctuary & Legal Clinic",
+    "category": "COMMUNITY_SANCTUARY",
+    "country": "US",
+    "countryName": "United States",
+    "city": "Boston, MA",
+    "address": "38 Summer St 5th Floor, Boston, MA 02110",
+    "lat": 42.3551,
+    "lng": -71.0589,
+    "mapCoordX": 0.88,
+    "mapCoordY": 0.28,
+    "phone": "+1 877-785-2020",
+    "website": "https://casamyrna.org",
+    "hours": "24/7 Safelink Statewide Helpline & Resource Center",
+    "adviceType": "Multilingual legal advocacy, transitional housing, emergency shelter, youth mentorship",
+    "keyAdviceOffered": [
+      "Operators of SafeLink, Massachusetts statewide 24/7 hotline",
+      "Specialized legal advocacy in immigration and family law",
+      "Three confidential residential shelters with full family support",
+      "Bilingual Spanish-English community counseling & economic stability"
+    ],
+    "state": "Massachusetts",
+    "stateCode": "MA",
+    "cityName": "Boston"
+  },
+  {
+    "id": "place_co_gathering_place_denver",
+    "name": "The Gathering Place Women's Daytime Sanctuary",
+    "category": "COMMUNITY_SANCTUARY",
+    "country": "US",
+    "countryName": "United States",
+    "city": "Denver, CO",
+    "address": "1535 High St, Denver, CO 80218",
+    "lat": 39.7408,
+    "lng": -104.9653,
+    "mapCoordX": 0.42,
+    "mapCoordY": 0.46,
+    "phone": "+1 303-321-4198",
+    "website": "https://tgpdenver.org",
+    "hours": "Mon-Fri: 8:30 AM - 4:00 PM MST",
+    "adviceType": "Daytime community sanctuary, mental health counseling, physical health clinics, job access",
+    "keyAdviceOffered": [
+      "Safe daytime refuge exclusively serving women and trans individuals",
+      "Trauma recovery counseling and peer support groups",
+      "Access to hot meals, showers, and safe mail drop",
+      "On-site legal aid clinics and family stability counseling"
+    ],
+    "state": "Colorado",
+    "stateCode": "CO",
+    "cityName": "Denver"
+  },
+  {
+    "id": "place_dc_dc_volunteer_lawyers",
+    "name": "DC Volunteer Lawyers Project Domestic Sanctuary Clinic",
+    "category": "LEGAL_RIGHTS",
+    "country": "US",
+    "countryName": "United States",
+    "city": "Washington D.C.",
+    "address": "5335 Wisconsin Ave NW Suite 440, Washington, DC 20015",
+    "lat": 38.9614,
+    "lng": -77.0858,
+    "mapCoordX": 0.78,
+    "mapCoordY": 0.42,
+    "phone": "+1 202-885-5542",
+    "website": "https://www.dcvlp.org",
+    "hours": "Mon-Fri: 9:00 AM - 5:00 PM EST",
+    "adviceType": "Free legal representation, civil protection orders, child custody defense, immigration",
+    "keyAdviceOffered": [
+      "Free court representation for civil protection orders",
+      "Holistic survivor legal advocacy with assigned crisis social workers",
+      "Confidential weekly drop-in community clinics throughout DC",
+      "Trauma-informed child advocacy and custody defense"
+    ],
+    "state": "District of Columbia",
+    "stateCode": "DC",
+    "cityName": "Washington D.C."
   },
   {
     "id": "place_uk_southall_black_sisters",
@@ -1959,7 +2192,10 @@ export const ADVICE_PLACES = [
       "Culturally sensitive advocacy in Hindi, Punjabi, Urdu & English",
       "Immigration and marital dispute guidance",
       "Emergency housing placement and legal referrals"
-    ]
+    ],
+    "state": "England",
+    "stateCode": "ENG",
+    "cityName": "London"
   },
   {
     "id": "place_uk_rights_of_women",
@@ -1982,7 +2218,10 @@ export const ADVICE_PLACES = [
       "Guidance through divorce, separation, and child arrangement orders",
       "Immigration and asylum law advice for vulnerable women",
       "Clear legal guides and online self-representation toolkits"
-    ]
+    ],
+    "state": "England",
+    "stateCode": "ENG",
+    "cityName": "London"
   },
   {
     "id": "place_uk_working_chance",
@@ -2005,7 +2244,10 @@ export const ADVICE_PLACES = [
       "Direct placement with inclusive, forward-thinking UK employers",
       "Confidence building, CV masterclasses, and mock interviews",
       "Post-employment peer support and financial autonomy workshops"
-    ]
+    ],
+    "state": "England",
+    "stateCode": "ENG",
+    "cityName": "London"
   },
   {
     "id": "place_uk_mind_womens_hub",
@@ -2028,7 +2270,10 @@ export const ADVICE_PLACES = [
       "Specialist maternal mental health and postpartum support",
       "Mindfulness, gentle movement, and creative wellbeing sessions",
       "Safe space drop-in for women experiencing anxiety and isolation"
-    ]
+    ],
+    "state": "England",
+    "stateCode": "ENG",
+    "cityName": "London"
   },
   {
     "id": "place_uk_wellbeing_of_women",
@@ -2051,7 +2296,62 @@ export const ADVICE_PLACES = [
       "Menopause workplace and personal support communities",
       "Endometriosis and reproductive health patient advocacy",
       "Free confidential health literature and webinars"
-    ]
+    ],
+    "state": "England",
+    "stateCode": "ENG",
+    "cityName": "London"
+  },
+  {
+    "id": "place_uk_scottish_womens_aid",
+    "name": "Scottish Women's Aid Edinburgh Sanctuary",
+    "category": "COMMUNITY_SANCTUARY",
+    "country": "GB",
+    "countryName": "United Kingdom",
+    "city": "Edinburgh, Scotland",
+    "address": "132 Rose St, Edinburgh EH2 3JD",
+    "lat": 55.952,
+    "lng": -3.201,
+    "mapCoordX": 0.43,
+    "mapCoordY": 0.18,
+    "phone": "+44 800 027 1234",
+    "website": "https://womensaid.scot",
+    "hours": "24/7 Scotland Domestic Abuse & Forced Marriage Helpline",
+    "adviceType": "Safe refuge, crisis helpline, legal advocacy, trauma recovery for women & children",
+    "keyAdviceOffered": [
+      "24/7 confidential Scottish national crisis support",
+      "Emergency refuge shelter access across all Scottish local authorities",
+      "Legal information and court advocacy under Scottish Law",
+      "Specialist support for immigrant women and children"
+    ],
+    "state": "Scotland",
+    "stateCode": "SCT",
+    "cityName": "Edinburgh"
+  },
+  {
+    "id": "place_uk_welsh_womens_aid",
+    "name": "Welsh Women's Aid Cardiff Support Center",
+    "category": "COMMUNITY_SANCTUARY",
+    "country": "GB",
+    "countryName": "United Kingdom",
+    "city": "Cardiff, Wales",
+    "address": "Pendragon House, Caversham Rd, Cardiff CF5 2TD",
+    "lat": 51.488,
+    "lng": -3.226,
+    "mapCoordX": 0.41,
+    "mapCoordY": 0.31,
+    "phone": "+44 808 801 0800",
+    "website": "https://welshwomensaid.org.uk",
+    "hours": "24/7 Live Fear Free All-Wales Helpline",
+    "adviceType": "Safe emergency accommodation, bilingual Welsh-English counseling, legal protection",
+    "keyAdviceOffered": [
+      "24/7 free, confidential all-Wales crisis helpline",
+      "Direct placement in specialist women's refuges across Wales",
+      "Bilingual Welsh and English legal guidance and advocacy",
+      "Community recovery groups and children's workers"
+    ],
+    "state": "Wales",
+    "stateCode": "WLS",
+    "cityName": "Cardiff"
   },
   {
     "id": "place_ca_downtown_eastside_womens",
@@ -2074,7 +2374,10 @@ export const ADVICE_PLACES = [
       "Indigenous women's programs, cultural healing and elder circles",
       "Victim advocacy and emergency housing placement",
       "Confidential counseling and harm reduction supplies"
-    ]
+    ],
+    "state": "British Columbia",
+    "stateCode": "BC",
+    "cityName": "Vancouver"
   },
   {
     "id": "place_ca_barbra_schlifer",
@@ -2097,7 +2400,10 @@ export const ADVICE_PLACES = [
       "Multilingual counseling in over 90 languages and dialects",
       "Specialized risk assessments and safety transition planning",
       "Trauma-informed court accompaniment and advocacy"
-    ]
+    ],
+    "state": "Ontario",
+    "stateCode": "ON",
+    "cityName": "Toronto"
   },
   {
     "id": "place_ca_times_change_career",
@@ -2120,7 +2426,10 @@ export const ADVICE_PLACES = [
       "Resume & LinkedIn optimization clinics and mock interview labs",
       "Computer training and digital literacy for women in career transitions",
       "Active job matching and hiring employer roundtables"
-    ]
+    ],
+    "state": "Ontario",
+    "stateCode": "ON",
+    "cityName": "Toronto"
   },
   {
     "id": "place_ca_womens_health_clinic_winnipeg",
@@ -2143,7 +2452,10 @@ export const ADVICE_PLACES = [
       "Mothers and postpartum wellness support groups",
       "Trauma-informed eating disorder counseling",
       "Birth control education, pap clinics, and reproductive choices"
-    ]
+    ],
+    "state": "Manitoba",
+    "stateCode": "MB",
+    "cityName": "Winnipeg"
   },
   {
     "id": "place_ca_trauma_therapy_toronto",
@@ -2166,7 +2478,10 @@ export const ADVICE_PLACES = [
       "Specialized mental health programs for women with perinatal depression",
       "Evidence-based stabilization, mindfulness, and cognitive processing",
       "Accessible care covered by provincial health insurance"
-    ]
+    ],
+    "state": "Ontario",
+    "stateCode": "ON",
+    "cityName": "Toronto"
   },
   {
     "id": "place_au_wire_melbourne",
@@ -2189,7 +2504,10 @@ export const ADVICE_PLACES = [
       "Confidential telephone and in-person drop-in center",
       "Financial capability coaching and family violence recovery",
       "Safe computer lounge and job-seeking resources"
-    ]
+    ],
+    "state": "Victoria",
+    "stateCode": "VIC",
+    "cityName": "Melbourne"
   },
   {
     "id": "place_au_lous_place_sydney",
@@ -2212,7 +2530,10 @@ export const ADVICE_PLACES = [
       "Free hot meals, clothing boutique, laundry and shower facilities",
       "On-site legal clinic, psychology sessions and trauma case management",
       "Art therapy, sewing, creative writing, and yoga classes"
-    ]
+    ],
+    "state": "New South Wales",
+    "stateCode": "NSW",
+    "cityName": "Sydney"
   },
   {
     "id": "place_au_womens_legal_victoria",
@@ -2235,7 +2556,10 @@ export const ADVICE_PLACES = [
       "Specialized family violence intervention order (FVIO) assistance",
       "Property settlement and child custody rights guidance",
       "Social work and holistic court support services"
-    ]
+    ],
+    "state": "Victoria",
+    "stateCode": "VIC",
+    "cityName": "Melbourne"
   },
   {
     "id": "place_au_fitted_for_work",
@@ -2258,7 +2582,10 @@ export const ADVICE_PLACES = [
       "One-on-one resume development and interview preparation",
       "Work readiness workshops and women mentor matching",
       "Ongoing post-placement support to maintain financial security"
-    ]
+    ],
+    "state": "Victoria",
+    "stateCode": "VIC",
+    "cityName": "Melbourne"
   },
   {
     "id": "place_au_jean_hailes_health",
@@ -2281,7 +2608,10 @@ export const ADVICE_PLACES = [
       "Comprehensive menopause and perimenopause consultations",
       "PCOS and endometriosis management plans",
       "Women-focused clinical psychology and pelvic physiotherapy"
-    ]
+    ],
+    "state": "Victoria",
+    "stateCode": "VIC",
+    "cityName": "Melbourne"
   },
   {
     "id": "place_au_panda_mental_health",
@@ -2304,7 +2634,10 @@ export const ADVICE_PLACES = [
       "Non-judgmental telephone and telehealth clinical support for mothers",
       "Peer support buddy matching with women who have lived experience",
       "Mental health transition plans for new mothers and partners"
-    ]
+    ],
+    "state": "Victoria",
+    "stateCode": "VIC",
+    "cityName": "Melbourne"
   },
   {
     "id": "place_eu_centre_hubertine_auclert",
@@ -2327,7 +2660,10 @@ export const ADVICE_PLACES = [
       "Orientation and direct connection to local emergency shelters in Île-de-France",
       "Support documentation for victims of cyber-harassment and sexism",
       "Gender equality and economic autonomy workshops"
-    ]
+    ],
+    "state": "France",
+    "stateCode": "FR",
+    "cityName": "Paris"
   },
   {
     "id": "place_eu_begine_berlin",
@@ -2350,7 +2686,10 @@ export const ADVICE_PLACES = [
       "Peer counseling, transition circles, and self-help group hosting",
       "Cultural empowerment events, readings, and sisterhood gatherings",
       "Information clearinghouse for Berlin women's counseling services"
-    ]
+    ],
+    "state": "Germany",
+    "stateCode": "DE",
+    "cityName": "Berlin"
   },
   {
     "id": "place_eu_european_womens_lobby",
@@ -2373,7 +2712,10 @@ export const ADVICE_PLACES = [
       "Pan-European directory of emergency hotlines and women's legal aid",
       "Advocacy toolkits on workplace pay transparency and equal pensions",
       "Support networks for migrant, refugee, and displaced European women"
-    ]
+    ],
+    "state": "Belgium",
+    "stateCode": "BE",
+    "cityName": "Brussels"
   },
   {
     "id": "place_eu_lara_berlin_mental",
@@ -2396,7 +2738,10 @@ export const ADVICE_PLACES = [
       "Multilingual counseling in German, English, Arabic, Farsi, and Polish",
       "Confidential psychological stabilization and somatic grounding",
       "Accompaniment to medical and legal appointments"
-    ]
+    ],
+    "state": "Germany",
+    "stateCode": "DE",
+    "cityName": "Berlin"
   },
   {
     "id": "place_eu_maison_des_femmes",
@@ -2419,7 +2764,10 @@ export const ADVICE_PLACES = [
       "Consultations with gynecologists, midwives, and specialized doctors",
       "Art therapy, dance therapy, and EMDR trauma processing",
       "Police and legal intake without stepping outside the sanctuary"
-    ]
+    ],
+    "state": "France",
+    "stateCode": "FR",
+    "cityName": "Saint-Denis (Paris)"
   },
   {
     "id": "place_eu_fraubio_berlin_career",
@@ -2442,7 +2790,10 @@ export const ADVICE_PLACES = [
       "Support on balancing family care and professional re-entry",
       "Digital skills training, CV reviews, and interview simulations",
       "Networking circles and mentoring with professional women in Berlin"
-    ]
+    ],
+    "state": "Germany",
+    "stateCode": "DE",
+    "cityName": "Berlin"
   },
   {
     "id": "place_in_sneha_mumbai",
@@ -2465,7 +2816,10 @@ export const ADVICE_PLACES = [
       "Mental health and trauma counseling with trained clinical social workers",
       "Free legal counseling for matrimonial disputes, custody & maintenance",
       "Referral to verified safe shelters across Greater Mumbai"
-    ]
+    ],
+    "state": "Maharashtra",
+    "stateCode": "MH",
+    "cityName": "Mumbai"
   },
   {
     "id": "place_in_jagori_delhi",
@@ -2488,7 +2842,10 @@ export const ADVICE_PLACES = [
       "Legal awareness and rights education regarding the Domestic Violence Act",
       "Community sisterhood circles and youth feminist collectives",
       "Referrals to medical and shelter infrastructure across Delhi NCR"
-    ]
+    ],
+    "state": "Delhi",
+    "stateCode": "DL",
+    "cityName": "New Delhi"
   },
   {
     "id": "place_in_majlis_legal_mumbai",
@@ -2511,7 +2868,10 @@ export const ADVICE_PLACES = [
       "Protection order, maintenance, and child custody legal support",
       "Pre-litigation counseling and negotiated mutual settlements",
       "Multilingual legal guidance in Hindi, Marathi, and English"
-    ]
+    ],
+    "state": "Maharashtra",
+    "stateCode": "MH",
+    "cityName": "Mumbai"
   },
   {
     "id": "place_in_bapu_trust_pune",
@@ -2534,7 +2894,10 @@ export const ADVICE_PLACES = [
       "Arts-based therapy, bodywork, and expressive healing circles",
       "Community emotional support groups and depression recovery",
       "Supportive care for caregivers and women facing deep burnout"
-    ]
+    ],
+    "state": "Maharashtra",
+    "stateCode": "MH",
+    "cityName": "Pune"
   },
   {
     "id": "place_in_sheroes_career_noida",
@@ -2557,7 +2920,10 @@ export const ADVICE_PLACES = [
       "Work-from-home and flexible employment matching",
       "Entrepreneurship incubation and micro-business guidance",
       "Women-only safe community forum and career counseling helpline"
-    ]
+    ],
+    "state": "Uttar Pradesh (Delhi NCR)",
+    "stateCode": "UP",
+    "cityName": "Noida"
   },
   {
     "id": "place_in_sneha_health_center",
@@ -2580,7 +2946,10 @@ export const ADVICE_PLACES = [
       "Adolescent and young women reproductive wellness workshops",
       "Anemia and menstrual health screening and support",
       "Community health worker home visitation and mental health support"
-    ]
+    ],
+    "state": "Maharashtra",
+    "stateCode": "MH",
+    "cityName": "Mumbai"
   },
   {
     "id": "place_global_un_women_sanctuary",
@@ -2603,7 +2972,10 @@ export const ADVICE_PLACES = [
       "International rights advocacy and emergency displacement guides",
       "Global campaign networks for gender equality and economic freedom",
       "Direct linkage to UN regional crisis response networks"
-    ]
+    ],
+    "state": "International",
+    "stateCode": "GLOBAL",
+    "cityName": "Worldwide Online"
   },
   {
     "id": "place_global_women_for_women",
@@ -2626,7 +2998,10 @@ export const ADVICE_PLACES = [
       "Financial literacy, savings circles, and business management training",
       "Women's rights education and community leadership development",
       "Lifelong international sister-to-sister sponsorship network"
-    ]
+    ],
+    "state": "International",
+    "stateCode": "GLOBAL",
+    "cityName": "Worldwide Online"
   },
   {
     "id": "place_global_equality_now",
@@ -2649,7 +3024,10 @@ export const ADVICE_PLACES = [
       "Strategic litigation for gender-based discrimination and digital abuse",
       "Emergency international advocacy for women facing severe human rights breaches",
       "Global legal knowledge-base and legal aid referrals"
-    ]
+    ],
+    "state": "International",
+    "stateCode": "GLOBAL",
+    "cityName": "Worldwide Online"
   }
 ];
 
@@ -2760,4 +3138,66 @@ export function getPlacesForCountry(countryCode) {
   if (!countryCode || countryCode === 'ALL') return ADVICE_PLACES;
   const filtered = ADVICE_PLACES.filter(p => p.country === countryCode);
   return filtered.length > 0 ? filtered : ADVICE_PLACES;
+}
+
+export function getStatesForCountry(countryCode) {
+  const normCode = normalizeCountryCode(countryCode);
+  const officialStates = getAllStatesForCountry(countryCode);
+  const stateMap = new Map();
+
+  // Populate from official comprehensive directory first (all 50 US states, UK regions, Canadian provinces, etc.)
+  officialStates.forEach(s => {
+    stateMap.set(s.name, { name: s.name, code: s.code || s.name, count: 0 });
+  });
+
+  // Calculate matching sanctuary counts from ADVICE_PLACES
+  let places = ADVICE_PLACES;
+  if (countryCode && countryCode !== 'ALL') {
+    places = places.filter(p => p.country === normCode || (normCode === 'GB' && p.country === 'UK'));
+  }
+  places.forEach(p => {
+    const sName = p.state || '';
+    if (sName) {
+      if (!stateMap.has(sName)) {
+        stateMap.set(sName, { name: sName, code: p.stateCode || sName, count: 0 });
+      }
+      stateMap.get(sName).count++;
+    }
+  });
+
+  return Array.from(stateMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function getCitiesForCountryAndState(countryCode, stateCodeOrName) {
+  const officialCities = getAllCitiesForCountryAndState(countryCode, stateCodeOrName);
+  const cityMap = new Map();
+
+  // Populate from official comprehensive directory first
+  officialCities.forEach(cityName => {
+    cityMap.set(cityName, { name: cityName, count: 0 });
+  });
+
+  // Calculate matching sanctuary counts from ADVICE_PLACES
+  let places = ADVICE_PLACES;
+  if (countryCode && countryCode !== 'ALL') {
+    const normCode = normalizeCountryCode(countryCode);
+    places = places.filter(p => p.country === normCode || (normCode === 'GB' && p.country === 'UK'));
+  }
+  if (stateCodeOrName && stateCodeOrName !== 'ALL') {
+    places = places.filter(p => 
+      (p.state || '').toLowerCase() === stateCodeOrName.toLowerCase() || 
+      (p.stateCode || '').toLowerCase() === stateCodeOrName.toLowerCase()
+    );
+  }
+  places.forEach(p => {
+    const cName = p.cityName || p.city;
+    if (cName) {
+      if (!cityMap.has(cName)) {
+        cityMap.set(cName, { name: cName, count: 0 });
+      }
+      cityMap.get(cName).count++;
+    }
+  });
+
+  return Array.from(cityMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 }

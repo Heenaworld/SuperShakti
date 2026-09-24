@@ -1,32 +1,78 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# SuperShakti — Women's Feeling-First Sanctuary & Care Ecosystem
 
-# Run and deploy your AI Studio app
+SuperShakti is a feeling-first women's sanctuary and support ecosystem designed to provide immediate care, compassionate sisterhood, and vetted professional help in a secure, zero-tracking space.
 
-This contains everything you need to run your app locally.
+## Core Pillars & Architecture
 
-View your app in AI Studio: https://ai.studio/apps/271e1a4a-d418-460e-856e-682d52b9f719
+1. **Feeling-First Care Matcher**:
+   - Emotion-led onboarding (Overwhelmed, Anxious, Heartbroken, Postpartum, Career Pivot, Safety).
+   - Generates an instant 360-degree Sanctuary Care Plan combining somatic micro-tools, sisterhood mentors, and clinical care.
+   - Powered by an Express backend (`/api/matcher`) with Gemini API empathy analysis and smart offline heuristics.
 
-## Run Web Application Locally
+2. **Tier 1 • Immediate Relief Micro-Tools**:
+   - **4-4-6 Vagus Nerve Somatic Breathing Engine**: Animated interactive pacing visualizer to gently down-regulate sympathetic heart rate.
+   - **5-4-3-2-1 Sensory Grounding Routine**: Interactive sensory checklist to de-escalate panic attacks.
+   - **Copyable Boundary Scripts Vault**: Categorized verbal scripts (Family, Work, Partner, Postpartum, Money) with gentle and firm variations.
 
-In addition to the Android app, a complete web application is available in the `web/` directory.
+3. **Tier 2 • Human Connection & Sisterhood**:
+   - **Lived-Experience Peer Mentors**: Vetted sisterhood mentors for postpartum depression, divorce, burnout, and autonomy.
+   - **1-Click Community Circles**: Supportive circles moderated with trauma care.
 
-### Quick Start:
-Double-click `run_web.bat` or run:
-```powershell
-python -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload
+4. **Tier 3 • Vetted Specialists & 24/7 Lifelines**:
+   - **Sliding-Scale Therapists & LMFTs**: Verified telehealth counseling ($30 - $80).
+   - **Direct Emergency Lifelines**: One-tap dialing to 988, National DV Hotline (1-800-799-SAFE), and Crisis Text Line.
+
+5. **16 Curated Milestone Care Packages**:
+   - 3-phase roadmaps for major life transitions with printable / PDF-ready 1-page summaries.
+
+6. **Physical Sanctuary Drop-In Map**:
+   - Offline directory of free clinics, safe havens, and legal aid centers.
+
+7. **Zero-Tracking Sovereignty, Encrypted Vault & Quick Exit**:
+   - One-tap / `Esc` key Quick Exit disguise displaying an innocuous, realistic local weather widget.
+   - **Zero-Knowledge Encrypted Sanctuary Vault**:
+     - Client-side AES-256-GCM authenticated encryption via Web Crypto API.
+     - PBKDF2 key derivation with 100,000 iterations using user-provided passphrase.
+     - 100% on-device IndexedDB storage (`SuperShaktiVaultDB`) with zero server persistence.
+     - Zero AI transmission: personal journal reflections and unsent letters are never sent to Gemini or any cloud model.
+     - 1-click Emergency Wipe button instantly purges the local database and cryptographic keys.
+   - **Zero-Knowledge Network Architecture**:
+     - Strips and anonymizes all IP addresses (`X-Forwarded-For`, `X-Real-IP`, etc.) at the backend gateway.
+     - Enforces strict `Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=()`.
+     - 100% verified 501(c)(3) institutions, recognized clinics, and certified helplines.
+     - Transparent, opt-in AI controls with explicit data disclosure.
+
+## Development & Deployment
+
+- **Port**: Runs on port `3000` (host `0.0.0.0`).
+- **Commands**:
+  - `npm run dev`: Boots full-stack application using Vite and Express.
+  - `npm run build`: Builds production static assets and standalone CommonJS server bundle.
+  - `npm start`: Runs production server.
+  - `npm run lint`: Runs TypeScript validation.
+
+## Docker Containerization
+
+The repository includes a multi-stage `Dockerfile` and `docker-compose.yml` for production deployments:
+
+### 1. Build and Run with Docker
+```bash
+# Build the Docker container image
+docker build -t supershakti .
+
+# Run the container (listening on port 3000)
+docker run -d -p 3000:3000 --name supershakti -e GEMINI_API_KEY="your-key-here" supershakti
 ```
-Then open [http://localhost:8000](http://localhost:8000) in any modern browser.
 
-### Web Features:
-- **Feeling-First Care Matcher**: Offline smart matcher + optional Gemini 1.5 Flash dynamic empathy matching.
-- **3-Tier Care System**:
-  - *Tier 1*: Immediate self-care micro-tools (4-4-6 vagus nerve breathing timer, grounding routines, copyable communication scripts).
-  - *Tier 2*: Peer buddies with lived experience & intro messaging, community circles & girls groups with 1-click join, sisterhood meetups with RSVP.
-  - *Tier 3*: Vetted professional counselors with sliding scale badges & direct 24/7 helpline links (988, DV, etc.).
-- **Quick Safety Exit Curtain**: One-tap weather widget disguise (`Sunny & Mild • 72°F`) for discreet privacy.
-- **Community Advice & Sanctuary Map**: Interactive canvas with 8 vetted drop-in clinics and resource centers across 5 categories.
-- **My Sanctuary**: Localized private bookmarked tools, active buddy connections, and care history.
-- **1-Page Care Summary**: Printable/copyable PDF-ready action plan.
+### 2. Using Docker Compose
+```bash
+# Start container with docker compose
+docker compose up -d
+
+# Stop container
+docker compose down
+```
+
+### 3. Healthcheck Endpoint
+The Docker image incorporates a healthcheck against `http://localhost:3000/api/health` with automatic retry handling.
 

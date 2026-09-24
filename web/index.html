@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SuperShakti - Women's Sisterhood & Life Transition Sanctuary</title>
   <link rel="icon" type="image/jpeg" href="assets/supershaki_logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <!-- Leaflet Interactive Map Engine (OpenStreetMap, Zero Tracking) -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
@@ -12,6 +15,42 @@
   <meta name="theme-color" content="#7C3AED">
 </head>
 <body>
+
+  <!-- Atmospheric Ambient Floating Sanctuary Icons -->
+  <div id="ambient-background-icons" class="ambient-background-icons" aria-hidden="true">
+    <div class="ambient-icon float-1" style="top: 8%; left: 5%;">
+      <!-- Lotus / Blossom -->
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/><path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2"/></svg>
+    </div>
+    <div class="ambient-icon float-2" style="top: 14%; right: 7%;">
+      <!-- Heart -->
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+    </div>
+    <div class="ambient-icon float-3" style="top: 35%; left: 4%;">
+      <!-- Shield Check -->
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+    </div>
+    <div class="ambient-icon float-4" style="top: 26%; left: 48%;">
+      <!-- Wind / Prana -->
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>
+    </div>
+    <div class="ambient-icon float-1" style="top: 45%; right: 5%;">
+      <!-- Sparkle -->
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+    </div>
+    <div class="ambient-icon float-2" style="top: 64%; left: 6%;">
+      <!-- Compass / Guide -->
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+    </div>
+    <div class="ambient-icon float-3" style="top: 72%; right: 8%;">
+      <!-- Feather / Gentle -->
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>
+    </div>
+    <div class="ambient-icon float-4" style="top: 86%; left: 38%;">
+      <!-- Rising Sun Sanctuary -->
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z"/><path d="M19 12a7 7 0 0 0-14 0"/><path d="M12 3v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m19.07 4.93-2.83 2.83"/></svg>
+    </div>
+  </div>
 
   <!-- Weather Disguise / Quick Safety Curtain -->
   <div id="safety-curtain-container"></div>
